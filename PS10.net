@@ -1,0 +1,204 @@
+( { netlist created  13/9/2007-18:11:44 }
+ ( 84DFBB8F $noname I78969 XFORM_32_FLBK_32_EFD20A  {Lib=XFORM_32_FLBK_32_EFD20A}
+  (   &1 N79094 )
+  (   &2 N79128 )
+  (   &3 N79140 )
+  (   &4 N79173 )
+  (   &5 GND )
+  (   &6 N79192 )
+  (   &7 GND )
+  (   &9 GND )
+  (  &10 VPLUS )
+ )
+ ( 84DFBB8F $noname I78971 C_32_POL  {Lib=C_32_POL}
+  (   &1 VPLUS )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I78973 C_32_POL  {Lib=C_32_POL}
+  (   &1 VPLUS )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I78975 C_32_POL  {Lib=C_32_POL}
+  (   &1 N79332 )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I78977 C_32_POL  {Lib=C_32_POL}
+  (   &1 GND )
+  (   &2 N79368 )
+ )
+ ( 84DFBB8F $noname I78979 C_32_POL  {Lib=C_32_POL}
+  (   &1 &_43_5S )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I78981 C_32_POL  {Lib=C_32_POL}
+  (   &1 &_43_3_46_3S )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I78983 XFORM_32_EFD20B  {Lib=XFORM_32_EFD20B}
+  (   &1 GND )
+  (   &2 &_43_5S )
+  (   &3 &_43_3_46_3S )
+  (   &4 N79332 )
+  (   &5 N79368 )
+  (   &6 COMMON )
+  (   &7 &_43_5 )
+  (   &8 &_43_3_46_3 )
+  (   &9 &_43_13 )
+  (  &10 &_45_13 )
+ )
+ ( 84DFBB8F $noname I78985 LT1072C  {Lib=LT1072C}
+  (   FB N84443 )
+  (   VC N79868 )
+  (  GND GND )
+  (  GND GND )
+  (  VIN VPLUS )
+  (  VSW N79094 )
+ )
+ ( 84DFBB8F $noname I78987 CHOKE_32_CMODE  {Lib=CHOKE_32_CMODE}
+  (   &1 VIN2 )
+  (   &4 GND )
+  (   &5 VPLUS )
+  (   &8 VIN1 )
+ )
+ ( 84DFBB8F $noname I78991 CON_45_3_32_PHONO  {Lib=CON_45_3_32_PHONO}
+  (   &1 VIN1 )
+  (   &2 VIN2 )
+ )
+ ( 84DFBB8F $noname I78993 R  {Lib=R}
+  (   &1 VPLUS )
+  (   &2 N79112 )
+ )
+ ( 84DFBB8F $noname I78995 C  {Lib=C}
+  (   &1 N79112 )
+  (   &2 N79094 )
+ )
+ ( 84DFBB8F $noname I78997 DIODE_32_SCHOTTKY  {Lib=DIODE_32_SCHOTTKY}
+  (ANODE N79128 )
+  (CATHODE &_43_5S )
+ )
+ ( 84DFBB8F $noname I78999 DIODE_32_SCHOTTKY  {Lib=DIODE_32_SCHOTTKY}
+  (ANODE N79140 )
+  (CATHODE &_43_3_46_3S )
+ )
+ ( 84DFBB8F $noname I79001 &1N4148  {Lib=&1N4148}
+  (ANODE N79173 )
+  (CATHODE N79332 )
+ )
+ ( 84DFBB8F $noname I79003 &1N4148  {Lib=&1N4148}
+  (ANODE N79368 )
+  (CATHODE N79192 )
+ )
+ ( 84DFBB8F $noname I79007 R  {Lib=R}
+  (   &1 N79691 )
+  (   &2 SHUTDOWN )
+ )
+ ( 84DFBB8F $noname I79009 CON_45_8  {Lib=CON_45_8}
+  (   &1 VIN1 )
+  (   &2 VIN2 )
+  (   &3 SHUTDOWN )
+  (   &4 COMMON )
+  (   &5 &_43_5 )
+  (   &6 &_43_3_46_3 )
+  (   &7 &_43_13 )
+  (   &8 &_45_13 )
+ )
+ ( 84DFBB8F $noname I79756 &2N5460_32_SMT  {Lib=&2N5460_32_SMT}
+  ( BASE N80336 )
+  (EMITTER GND )
+  (COLLECTOR N79868 )
+ )
+ ( 84DFBB8F $noname I79885 R  {Lib=R}
+  (   &1 N79868 )
+  (   &2 N80145 )
+ )
+ ( 84DFBB8F $noname I79906 DIODE_32_ZENER  {Lib=DIODE_32_ZENER}
+  (ANODE N80336 )
+  (CATHODE VPLUS )
+ )
+ ( 84DFBB8F $noname I80033 C_32_POL  {Lib=C_32_POL}
+  (   &1 N80145 )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I80035 R  {Lib=R}
+  (   &1 N80336 )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I80051 &2N7002  {Lib=&2N7002}
+  (   &1 GND )
+  (   &2 N79691 )
+  (   &3 N79868 )
+ )
+ ( 84DFBB8F $noname I80699 R  {Lib=R}
+  (   &1 &_43_5 )
+  (   &2 COMMON )
+ )
+ ( 84DFBB8F $noname I80701 R  {Lib=R}
+  (   &1 &_43_3_46_3 )
+  (   &2 COMMON )
+ )
+ ( 84DFBB8F $noname I80705 R  {Lib=R}
+  (   &1 &_43_13 )
+  (   &2 COMMON )
+ )
+ ( 84DFBB8F $noname I80709 R  {Lib=R}
+  (   &1 &_45_13 )
+  (   &2 COMMON )
+ )
+ ( 84DFBB8F $noname I80877 C  {Lib=C}
+  (   &1 VIN1 )
+  (   &2 VIN2 )
+ )
+ ( 84DFBB8F $noname I80976 R_32_VARIABLE  {Lib=R_32_VARIABLE}
+  (   &1 GND )
+  (   &2 N81061 )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I81059 R  {Lib=R}
+  (   &1 N84443 )
+  (   &2 N81061 )
+ )
+ ( 84DFBB8F $noname I81066 R  {Lib=R}
+  (   &1 N81111 )
+  (   &2 &_43_5S )
+ )
+ ( 84DFBB8F $noname I81109 POST_45_2  {Lib=POST_45_2}
+  (   &1 N81111 )
+  (   &2 &_43_3_46_3S )
+ )
+ ( 84DFBB8F $noname I81207 R  {Lib=R}
+  (   &1 GND )
+  (   &2 SHUTDOWN )
+ )
+ ( 84DFBB8F $noname I81967 C_32_POL  {Lib=C_32_POL}
+  (   &1 &_43_5S )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I81971 C_32_POL  {Lib=C_32_POL}
+  (   &1 &_43_3_46_3S )
+  (   &2 GND )
+ )
+ ( 84DFBB8F $noname I82267 C_32_POL  {Lib=C_32_POL}
+  (   &1 &_43_5 )
+  (   &2 COMMON )
+ )
+ ( 84DFBB8F $noname I82271 C_32_POL  {Lib=C_32_POL}
+  (   &1 &_43_3_46_3 )
+  (   &2 COMMON )
+ )
+ ( 84DFBB8F $noname I82326 C_32_POL  {Lib=C_32_POL}
+  (   &1 &_43_13 )
+  (   &2 COMMON )
+ )
+ ( 84DFBB8F $noname I82330 C_32_POL  {Lib=C_32_POL}
+  (   &1 COMMON )
+  (   &2 &_45_13 )
+ )
+ ( 84DFBB8F $noname I84174 C  {Lib=C}
+  (   &1 VPLUS )
+  (  GND GND )
+ )
+ ( 84DFBB8F $noname I84244 R  {Lib=R}
+  (   &1 N84443 )
+  (   &2 N81111 )
+ )
+)
