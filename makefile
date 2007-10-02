@@ -4,9 +4,14 @@
 
 # CFLAGS = -DDEBUG
 # CFLAGS = -O
-CFLAGS = -g -DDEBUG
+CFLAGS = -g
 
 SOURCES = edif.y
+
+all  :	edif ppedif
+
+ppedif : ppedif.o
+	cc $(CFLAGS) ppedif.c -o ppedif
 
 edif :	edif.o 
 	cc $(CFLAGS) edif.o -o edif
@@ -24,4 +29,4 @@ edif.c : edif.y
 # 	cat edif.y.1 edif.y.2 > edif.y
 
 clean :
-	rm *.o edif.c edif.output edif.tab.c edif.tab.h edif
+	rm *.o edif.c edif.output edif.tab.c edif.tab.h edif ppedif

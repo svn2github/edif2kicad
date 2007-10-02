@@ -1,5 +1,9 @@
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	edif.y - Revision x - Frank Bennett - Wed Sep 19 14:19:42 MDT 2
+
+        Tue Oct  2 12:28:38 MDT 2007fwb - added a pretty print edif 
+	  program (ppedif.c) and to makefile
+
 	Modified to output a KiCad Netlist
 	1) find/store InstanceNameDef. ViewRef - i.e. CMP31.cap
         2) find/store Nets: NetNameDef, InstRef, PortRef
@@ -7,6 +11,7 @@
 
 	Files:
 	makefile	- Unix style makefile, runs Bison & runs gcc
+	ppedif.c	- pretty print EDIF
 	edif.y  	- edif BNF Grammer, yylex, & main.c
 	PS10      	- OrCad schematic in EDIF format
 	PS10.EDF  	- Original Ps10
@@ -23,7 +28,8 @@
 
 	Install:
 		make
-		edif < PS10.EDF > PS10.net
+		ppedif < PS10.EDF > PS10
+		edif < PS10 > PS10.net
 	or 	edif < hptest >hptest.net
 
 	Edif Notes:
