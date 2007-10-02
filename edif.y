@@ -1,6 +1,6 @@
 %{
 /*
- *	$Header:  $
+ * $ID:   $
  */
 /************************************************************************
  *									*
@@ -27,6 +27,11 @@
 
 extern int atoi();
 extern int bug;
+
+static FILE *Input = NULL;		/* input stream */
+static FILE *Error = NULL;		/* error stream */
+char FileNameEdf[64], FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
+FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib;
 
 struct inst {
   char 		*ins, *sym;
@@ -525,7 +530,7 @@ _Cell       :	CellType
             ;
 
 CellNameDef :	NameDef
-		{if(bug>4)printf("\nCellNameDef: '%s'\n", $1);}
+		{if(bug>4)fprintf(Error,"\nCellNameDef: '%s'\n", $1);}
 	    ;
 
 CellRef     :	CELLREF CellNameRef _CellRef PopC
@@ -537,7 +542,7 @@ _CellRef    :
 	    ;
 
 CellNameRef :	NameRef
-		{if(bug>4)printf("\nCellNameRef: '%15s' ", $1);}
+		{if(bug>4)fprintf(Error,"\nCellNameRef: '%15s' ", $1);}
 	    ;
 
 CellType    :	CELLTYPE _CellType PopC
@@ -572,7 +577,7 @@ Color :		COLOR ScaledInt ScaledInt ScaledInt PopC
       ;
 
 Comment :	COMMENT _Comment PopC
-		{$$=$2; if(bug>5)printf("   Comment: %s\n",$2);}
+		{$$=$2; if(bug>5)fprintf(Error,"   Comment: %s\n",$2);}
 	;
 
 _Comment :	Str
@@ -730,7 +735,7 @@ Designator :	DESIGNATOR _Designator PopC
 	   ;
 
 _Designator :	Str
-		{if(bug>4)printf("-%s\n",$1);}
+		{if(bug>4)fprintf(Error,"-%s\n",$1);}
 	    |	StrDisplay
 	    ;
 
@@ -775,7 +780,7 @@ _Direction  :	INOUT
 	    ;
 
 Display     :	DISPLAY _Display _DisplayJust _DisplayOrien _DisplayOrg PopC
-		{$$=$2; if(bug>5)printf(" Display: %s\n", $2);}
+		{$$=$2; if(bug>5)fprintf(Error," Display: %s\n", $2);}
    	    ;
 
 _Display    :	FigGrpNameRef
@@ -918,7 +923,7 @@ FigGrpOver :	FIGUREGROUPOVERRIDE _FigGrpOver PopC
 	   ;
 
 _FigGrpOver :	FigGrpNameRef
-		{if(bug>5)printf("_FigGOv %s\n", $1);}
+		{if(bug>5)fprintf(Error,"_FigGOv %s\n", $1);}
 	    |	_FigGrpOver CornerType
 	    |	_FigGrpOver EndType
 	    |	_FigGrpOver PathWidth
@@ -944,7 +949,7 @@ Figure :	FIGURE _Figure PopC
        ;
 
 _Figure :	FigGrpNameDef
-		{if(bug>5)printf(" _Fig: %s\n", $1);}
+		{if(bug>5)fprintf(Error," _Fig: %s\n", $1);}
 	|	FigGrpOver
 	|	_Figure Circle
 	|	_Figure Dot
@@ -1049,7 +1054,7 @@ Initial :	INITIAL PopC
 Instance :	INSTANCE InstNameDef _Instance PopC
 		{
 		$$=$2;
-		if(bug>2)printf(" InstNameDef: %s\n", $2);
+		if(bug>2)fprintf(Error," InstNameDef: %s\n", $2);
 		iptr->ins = $2;
 		}
 	 ;
@@ -1107,7 +1112,7 @@ InstNameDef :	NameDef
 	    ;
 
 InstNameRef :	NameRef
-		{if(bug>4)printf(" InstNameRef: %s\n", $1);}
+		{if(bug>4)fprintf(Error," InstNameRef: %s\n", $1);}
 	    |	Member
 	    ;
 
@@ -1214,7 +1219,7 @@ KeywordDisp :	KEYWORDDISPLAY _KeywordDisp PopC
 	    ;
 
 _KeywordDisp :	KeywordName
-		{if(bug>5)printf(" KeywNam: %s ",$1);}
+		{if(bug>5)fprintf(Error," KeywNam: %s ",$1);}
 	     |	_KeywordDisp Display
 	     ;
 
@@ -1238,11 +1243,11 @@ LessThan :	LESSTHAN ScaledInt PopC
 	 ;
 
 LibNameDef :	NameDef
-		{if(bug>5)printf("LibNameDef: %s\n", $1);}
+		{if(bug>5)fprintf(Error,"LibNameDef: %s\n", $1);}
 	   ;
 
 LibNameRef :	NameRef
-		{if(bug>5)printf(" LibNameRef: %s\n", $1);}
+		{if(bug>5)fprintf(Error," LibNameRef: %s\n", $1);}
 	   ;
 
 Library :	LIBRARY LibNameDef EdifLevel _Library PopC
@@ -1424,7 +1429,7 @@ _Match :	LogicNameRef
        ;
 
 Member :	MEMBER NameRef _Member PopC
-		{$$=$2;printf(" Member %s\n", $2);}
+		{$$=$2;if(bug>4)fprintf(Error," Member %s\n", $2);}
        ;
 
 _Member :	Int
@@ -1487,17 +1492,17 @@ _Name :		Ident
       ;
 
 NameDef :	Ident
-		{if(bug>5)printf("NameDef: %s\n", $1);}
+		{if(bug>5)fprintf(Error,"NameDef: %s\n", $1);}
 	|	Name
-		{if(bug>5)printf("NameDef: %s\n", $1);}
+		{if(bug>5)fprintf(Error,"NameDef: %s\n", $1);}
 	|	Rename
-		{if(bug>5)printf("NameDef: %s\n", $1);}
+		{if(bug>5)fprintf(Error,"NameDef: %s\n", $1);}
 	;
 
 NameRef :	Ident
-		{if(bug>5)printf(" NameRef: %s\n", $1);}
+		{if(bug>5)fprintf(Error," NameRef: %s\n", $1);}
 	|	Name
-		{if(bug>5)printf(" NameRef: %s\n", $1);}
+		{if(bug>5)fprintf(Error," NameRef: %s\n", $1);}
 	;
 
 Net 	:	NET NetNameDef _Net PopC
@@ -1564,14 +1569,14 @@ _NetMap :
 
 NetNameDef :	NameDef
 		{
-		if(bug>2)printf("\nNetNameDef: %s\n", $1);
+		if(bug>2)fprintf(Error,"\nNetNameDef: %s\n", $1);
 		cur_nnam = $1;
 		}
 	   |	Array
 	   ;
 
 NetNameRef :	NameRef
-		{if(bug>2)printf(" NetNameRef: %s\n", $1);}
+		{if(bug>2)fprintf(Error," NetNameRef: %s\n", $1);}
 	   |	Member
 	   ;
 
@@ -1658,7 +1663,7 @@ _OpenShape :	Curve
 	   ;
 
 Orientation :	ORIENTATION _Orientation PopC
-		{if(bug>5)printf(" Orient %s ",$2);}
+		{if(bug>5)fprintf(Error," Orient %s ",$2);}
 	    ;
 
 _Orientation :	R0
@@ -1680,7 +1685,7 @@ _Orientation :	R0
 	     ;
 
 Origin       :	ORIGIN PointValue PopC
-		{$$=$2; if(bug>5)printf("Org: %d %d\n", $2->x, $2->y);}
+		{$$=$2; if(bug>5)fprintf(Error,"Org: %d %d\n", $2->x, $2->y);}
              ;
 
 OverhngDist :	OVERHANGDISTANCE RuleNameDef FigGrpObj FigGrpObj _OverhngDist
@@ -1806,7 +1811,7 @@ _PointList :
 
 PointValue : 	PT Int Int PopC
 		{
-		if(bug>8)printf("PtVal %d %d\n", $2,$3);
+		if(bug>8)fprintf(Error,"PtVal %d %d\n", $2,$3);
 	 	$$=(struct pt *)Malloc(sizeof(struct pt)); $$->x=$2; $$->y=$3;
 		}
 	   ;
@@ -1881,19 +1886,19 @@ PortImpl :	PORTIMPLEMENTATION _PortImpl PopC
 	 ;
 
 _PortImpl :	Name
-		{if(bug>5)printf(" _PortImpl Name %s\n", $1);}
+		{if(bug>5)fprintf(Error," _PortImpl Name %s\n", $1);}
 	  |	Ident
-		{if(bug>5)printf(" _PortImpl Ident %s\n", $1);}
+		{if(bug>5)fprintf(Error," _PortImpl Ident %s\n", $1);}
 	  |	_PortImpl ConnectLoc
-		{if(bug>5)printf(" _PortImpl ConnLoc \n");}
+		{if(bug>5)fprintf(Error," _PortImpl ConnLoc \n");}
 	  |	_PortImpl Figure
-		{if(bug>5)printf(" _PortImpl Figure \n");}
+		{if(bug>5)fprintf(Error," _PortImpl Figure \n");}
 	  |	_PortImpl Instance
-		{if(bug>5)printf(" _PortImpl Instance \n");}
+		{if(bug>5)fprintf(Error," _PortImpl Instance \n");}
 	  |	_PortImpl CommGraph
 	  |	_PortImpl PropDisplay
 	  |	_PortImpl KeywordDisp
-		{if(bug>5)printf(" _PortImpl KeywD \n");}
+		{if(bug>5)fprintf(Error," _PortImpl KeywD \n");}
 	  |	_PortImpl Property
 	  |	_PortImpl UserData
 	  |	_PortImpl Comment
@@ -1939,7 +1944,7 @@ _PortMap :
 	 ;
 
 PortNameDef :	NameDef
-		{if(bug>4)printf(" PortNameDef: %s\n", $1);}
+		{if(bug>4)fprintf(Error," PortNameDef: %s\n", $1);}
 	    |	Array
 	    ;
 
@@ -1950,7 +1955,7 @@ PortNameRef :	NameRef
 PortRef     :	PORTREF PortNameRef _PortRef PopC
 		{
 		$$=$2; 
-		if($3 != NULL && bug>2)printf("PortRef: %s\n", $2);
+		if($3 != NULL && bug>2)fprintf(Error,"PortRef: %s\n", $2);
 		if(cptr != NULL)  // InstRef usually first
             	  cptr->pin = $2;
 		}
@@ -1961,7 +1966,7 @@ _PortRef :
 	 |	PortRef
 	 |	InstanceRef
 		{
-		if(bug>2)printf("InstRef: %8s ", $1);
+		if(bug>2)fprintf(Error,"InstRef: %8s ", $1);
 		cptr = (struct con *) malloc (sizeof (struct con));
             	cptr->ref = $1;
             	cptr->nnam = cur_nnam;
@@ -1996,11 +2001,11 @@ _Property :	TypedValue
 	  ;
 
 PropNameDef :	NameDef
-		{if(bug>5)printf(" PropNameDef: %s\n", $1);}
+		{if(bug>5)fprintf(Error," PropNameDef: %s\n", $1);}
 	    ;
 
 PropNameRef :	NameRef
-		{if(bug>5)printf(" PropNameRef: %s ", $1);}
+		{if(bug>5)fprintf(Error," PropNameRef: %s ", $1);}
 	    ;
 
 ProtectFrame :	PROTECTIONFRAME _ProtectFrame PopC
@@ -2201,11 +2206,11 @@ Symbol :	SYMBOL _Symbol PopC
 
 _Symbol :
 	|	_Symbol PortImpl
-		{if(bug>5)printf(" _Sym PortImpl\n");}
+		{if(bug>5)fprintf(Error," _Sym PortImpl\n");}
 	|	_Symbol Figure
-		{if(bug>5)printf(" _Sym Figure\n");}
+		{if(bug>5)fprintf(Error," _Sym Figure\n");}
 	|	_Symbol Instance
-		{if(bug>5)printf(" _Sym Instance\n");}
+		{if(bug>5)fprintf(Error," _Sym Instance\n");}
 	|	_Symbol CommGraph
 	|	_Symbol Annotate
 	|	_Symbol PageSize
@@ -2389,12 +2394,12 @@ _UserData :	Ident
 	  ;
 
 ValueNameDef :	NameDef
-		{if(bug>5)printf(" ValueNameDef: %s\n", $1);}
+		{if(bug>5)fprintf(Error," ValueNameDef: %s\n", $1);}
 	     |	Array
 	     ;
 
 ValueNameRef :	NameRef
-		{if(bug>5)printf(" ValueNameRef: %s\n", $1);}
+		{if(bug>5)fprintf(Error," ValueNameRef: %s\n", $1);}
 	     |	Member
 	     ;
 
@@ -2439,16 +2444,16 @@ _ViewMap :
 	 ;
 
 ViewNameDef :	NameDef
-		{if(bug>5)printf(" ViewNameDef: %s\n", $1);}
+		{if(bug>5)fprintf(Error," ViewNameDef: %s\n", $1);}
 	    ;
 
 ViewNameRef :	NameRef
-		{if(bug>5)printf(" ViewNameRef: %s\n", $1);}
+		{if(bug>5)fprintf(Error," ViewNameRef: %s\n", $1);}
 	    ;
 
 ViewRef :	VIEWREF ViewNameRef _ViewRef PopC
 		{
-		$$=$2; if(bug>2)printf("ViewRef: %25s ", $3);
+		$$=$2; if(bug>2)fprintf(Error,"ViewRef: %25s ", $3);
 		iptr = (struct inst *)Malloc(sizeof (struct inst));
 		iptr->sym = $3;
 		iptr->nxt = insts;
@@ -2522,11 +2527,11 @@ _Written :	TimeStamp
 	 ;
 
 Ident    :	IDENT
-		{ if(bug>8)printf("ID:%s\n",$1); }
+		{ if(bug>8)fprintf(Error,"ID:%s\n",$1); }
          ;
 
 Str      :	STR
-		{ if(bug>8)printf("STR:%s\n",$1); }
+		{ if(bug>8)fprintf(Error,"STR:%s\n",$1); }
          ;
 
 Int 	 :	INT
@@ -2562,8 +2567,6 @@ typedef struct ContextCar {
 /*
  *	Parser state variables.
  */
-static FILE *Input = NULL;		/* input stream */
-static FILE *Error = NULL;		/* error stream */
 extern char *InFile;			/* file name on the input stream */
 static long LineNumber;			/* current input line number */
 static ContextCar *CSP = NULL;		/* top of context stack */
@@ -4199,11 +4202,46 @@ int bug;  		// debug level: >2 netlist, >5 schematic, >8 all
 
 main(int argc, char *argv[])
 {
+  char * version      = "0.9";
+  char * progname;
+
+  progname = strrchr(argv[0],'/');
+  if (progname)
+    progname++;
+  else
+    progname = argv[0];
+
+  printf("*** %s Version %s ***\n", progname, version);
+
+  // if( argc != 2 ) {
+  //    printf( " usage: %s EDIDsrc \n") ; return(1);
+  // }
+
+  if( argc != 2 ){
+     FileEdf = stdin;
+     FileNet = stdout;
+  }else{
+     sprintf(FileNameEdf,"%s",argv[1]);
+     sprintf(FileNameNet,"%s.net",argv[1]);
+  // sprintf(FileNameEESchema,"%s.sch",argv[2]);
+  // sprintf(FileNameSdtLib,"%s.src",argv[3]);
+     if( (FileEdf = fopen( FileNameEdf, "rt" )) == NULL ) {
+          printf( " %s non trouve\n", FileNameEdf);
+          return(-1);
+     }
+
+     if( (FileNet = fopen( FileNameNet, "wt" )) == NULL ) {
+          printf( " %s impossible a creer\n", FileNameNet);
+          return(-1);
+     }
+  }
+
+
   yydebug=0; bug=0;
 //  yydebug=0; bug=3;  
 //  yydebug=1; bug=9;
 
-  ParseEDIF(stdin,stderr);
+  ParseEDIF(FileEdf, stderr);
 
   // bubble sort cons by ref
   struct con *start, *a, *b, *c, *e = NULL, *tmp;
@@ -4254,24 +4292,24 @@ main(int argc, char *argv[])
   // output kicad netlist
   int  first=1;
 
-  printf("( { netlist created  13/9/2007-18:11:44 }\n");
+  fprintf(FileNet,"( { netlist created  13/9/2007-18:11:44 }\n");
   // by component
   strcpy(s1,  "" );
   while (cons != NULL){
     if(strcmp(s1, cons->ref) != 0) {
-      if(!first) printf(" )\n");
+      if(!first) fprintf(FileNet," )\n");
       for( s=NULL, iptr=insts ; iptr != NULL ; iptr = iptr->nxt ){
 	if( !strcmp(cons->ref, iptr->ins)){
 	   s = iptr->sym;
 	   break;
 	}
       }	
-      printf(" ( 84DFBB8F $noname %s %s  {Lib=%s}\n", cons->ref, s, s);
+      fprintf(FileNet," ( 84DFBB8F $noname %s %s  {Lib=%s}\n", cons->ref, s, s);
       first=0;
     }
-    printf("  (%5s %s )\n",cons->pin, cons->nnam);
+    fprintf(FileNet,"  (%5s %s )\n",cons->pin, cons->nnam);
     strcpy(s1,  cons->ref);
     cons = cons->nxt;
   }
-  printf(" )\n)\n");
+  fprintf(FileNet," )\n)\n");
 }
