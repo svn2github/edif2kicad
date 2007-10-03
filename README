@@ -1,8 +1,11 @@
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	edif.y - Revision x - Frank Bennett - Wed Sep 19 14:19:42 MDT 2
 
-        Tue Oct  2 12:28:38 MDT 2007fwb - added a pretty print edif 
-	  program (ppedif.c) and to makefile
+ 	20071003 fwb - 	split main out of edif. Now have e2net, e2sch
+			this also might keep the parser clean, which will 
+			just build the structs
+        20071002 fwb - 	added a pretty print edif program (ppedif.c) and 
+			updated makefile
 
 	Tools with EDIF out writer:
 	   o OrCad
