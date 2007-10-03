@@ -4,6 +4,17 @@
         Tue Oct  2 12:28:38 MDT 2007fwb - added a pretty print edif 
 	  program (ppedif.c) and to makefile
 
+	Tools with EDIF out writer:
+	   o OrCad
+	   o DataXpress
+	   o Viewlogic
+	   o IntuSoft ICAP
+	   o Protel nVisage
+   	   o PADS ?
+           o P-CAD ?
+ 	   o EDIF viewer (www.cimmetry.com)
+	   o EDIF translator (www.elgris.com/content/edif_overview.html)
+
 	Modified to output a KiCad Netlist
 	1) find/store InstanceNameDef. ViewRef - i.e. CMP31.cap
         2) find/store Nets: NetNameDef, InstRef, PortRef

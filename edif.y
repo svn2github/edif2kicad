@@ -31,7 +31,7 @@ extern int bug;
 static FILE *Input = NULL;		/* input stream */
 static FILE *Error = NULL;		/* error stream */
 char FileNameEdf[64], FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
-FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib;
+FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib=NULL;
 
 struct inst {
   char 		*ins, *sym;
@@ -4205,6 +4205,10 @@ main(int argc, char *argv[])
   char * version      = "0.9";
   char * progname;
 
+  yydebug=0; bug=0;
+//  yydebug=0; bug=3;  
+//  yydebug=1; bug=9;
+
   progname = strrchr(argv[0],'/');
   if (progname)
     progname++;
@@ -4223,8 +4227,8 @@ main(int argc, char *argv[])
   }else{
      sprintf(FileNameEdf,"%s",argv[1]);
      sprintf(FileNameNet,"%s.net",argv[1]);
-  // sprintf(FileNameEESchema,"%s.sch",argv[2]);
-  // sprintf(FileNameSdtLib,"%s.src",argv[3]);
+     sprintf(FileNameEESchema,"%s.sch",argv[1]);
+     sprintf(FileNameSdtLib,"%s.src",argv[1]);
      if( (FileEdf = fopen( FileNameEdf, "rt" )) == NULL ) {
           printf( " %s non trouve\n", FileNameEdf);
           return(-1);
@@ -4234,12 +4238,17 @@ main(int argc, char *argv[])
           printf( " %s impossible a creer\n", FileNameNet);
           return(-1);
      }
+
+     if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
+          printf( " %s impossible a creer\n", FileNameEESchema);
+          return(-1);
+     }
   }
 
+  fprintf(FileEESchema,"EESchema Schematic File Version 1\n");
+  fprintf(FileEESchema,"LIBS:none\n");
+  fprintf(FileEESchema,"EELAYER 0 0\nEELAYER END\n");
 
-  yydebug=0; bug=0;
-//  yydebug=0; bug=3;  
-//  yydebug=1; bug=9;
 
   ParseEDIF(FileEdf, stderr);
 
@@ -4312,4 +4321,11 @@ main(int argc, char *argv[])
     cons = cons->nxt;
   }
   fprintf(FileNet," )\n)\n");
+
+  fclose(FileEdf);
+  fclose(FileNet);
+  fclose(FileEESchema);
+  if( FileSdtLib ) fclose(FileSdtLib);
+  return(0);
+
 }
