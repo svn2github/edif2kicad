@@ -1,10 +1,11 @@
 /*
  * e2net - EDIF to KiCad netlist
  */
-#define e_global
+#define global
 
 #include <stdio.h>
 #include "ed.h"
+#include "eelibsl.h"
 
 char *InFile = "-";
 
@@ -14,9 +15,9 @@ int bug;  		// debug level: >2 netlist, >5 schematic, >8 all
 char FileNameEdf[64], FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
 FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib=NULL;
 
-e_global char *cur_nnam=NULL; 
-e_global struct inst *insts=NULL, *iptr=NULL; 
-e_global struct con  *cons=NULL,  *cptr=NULL;
+global char                      *cur_nnam=NULL;
+global struct inst               *insts=NULL, *iptr=NULL;
+global struct con                *cons=NULL,  *cptr=NULL;
 
 main(int argc, char *argv[])
 {

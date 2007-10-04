@@ -1,11 +1,13 @@
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-	edif.y - Revision x - Frank Bennett - Wed Sep 19 14:19:42 MDT 2
+	edif.y, e2net, e2sch - Frank Bennett 
 
+	20071003 fwb -  initial ci e2lib.c
  	20071003 fwb - 	split main out of edif. Now have e2net, e2sch
 			this also might keep the parser clean, which will 
 			just build the structs
         20071002 fwb - 	added a pretty print edif program (ppedif.c) and 
 			updated makefile
+	20070919 fwb -  Original release
 
 	Tools with EDIF out writer:
 	   o OrCad
@@ -42,13 +44,16 @@
 
 	Install:
 		make
-		ppedif < PS10.EDF > PS10
-		edif < PS10 > PS10.net
-	or 	edif < hptest >hptest.net
+		cd examples
+		../ppedif < PS10.EDF > PS10
+		../e2net < PS10 > PS10.net or
+		../e2net PS10 or 
+		../e2net hptest or
+		../e2lib examples/PS10
 
 	Edif Notes:
 	o hptest is more readable for parser debugging. This begs for
- 	  EdifBeautifier for the OrCad file
+ 	  EdifBeautifier for the OrCad output (use ppedif)
 	o EDIF schematic file contain
 		- symbol ports names, Direction, Designator
 		- symbol graphics, justification, orientation, origin
@@ -60,6 +65,8 @@
 	  o find/output schematic drawing, symbol graphics
 
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+	roger's previous comments:
 
 	  This is an EDIF 2.0.0 parser, well more like a recognizer. If
 	you build the test case and run it with a valid EDIF file on the

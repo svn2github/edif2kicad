@@ -4,8 +4,8 @@
 #ifndef E_H
 #define E_H
 
-#ifndef e_global
-#define e_global extern
+#ifndef global
+#define global extern
 #endif
 
 #define YYDEBUG 1
@@ -36,4 +36,17 @@ struct con  {
 
 struct pt { int x,y;};
 
+struct plst { struct pt *xy; struct plst *nxt;};
+
 #endif
+
+/*
+ViewRef :       VIEWREF ViewNameRef _ViewRef PopC
+                {
+                $$=$2; if(bug>2)fprintf(Error,"ViewRef: %25s ", $3);
+                iptr = (struct inst *)Malloc(sizeof (struct inst));
+                iptr->sym = $3;
+                iptr->nxt = insts;
+                insts = iptr;
+                }
+*/

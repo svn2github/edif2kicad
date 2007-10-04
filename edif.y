@@ -19,22 +19,29 @@
 #include <ctype.h>
 
 #include "ed.h"
+#include "eelibsl.h"
+
+#define SIZE_PIN_TEXT 60
 
 static FILE *Input = NULL;              /* input stream */
 static FILE *Error = NULL;              /* error stream */
 
-e_global char *cur_nnam; 
-e_global struct inst *insts, *iptr; 
-e_global struct con  *cons,  *cptr;
+global char *cur_nnam; 
+global struct inst *insts, *iptr; 
+global struct con  *cons,  *cptr;
+
+int *Poly;
+LibraryDrawEntryStruct  *New = NULL;
 
 %}
 
-%union    { char *s; int d; struct pt *p; }
+%union    { char *s; int d; struct pt *p; struct plst *pl;}
 
 %start	Edif
 
-%type   <d>	Int _Member
+%type   <pl>	Rectangle _Rectangle BoundBox PointList _PointList Path _Path
 %type   <p>	Origin PointValue 
+%type   <d>	Int _Member
 
 %type   <s>	Ident Name _Name NameDef NameRef 
 %type   <s>	NetNameDef Array
@@ -48,6 +55,8 @@ e_global struct con  *cons,  *cptr;
 %type   <s>	ViewRef _ViewRef ViewNameRef ViewList _ViewList
 %type   <s>	Comment _Comment
 %type   <s>	Instance _Instance InstanceRef InstNameDef InstNameRef 
+%type   <s>	LibNameDef
+%type   <s>	Designator _Designator PortNameDef
 
 %token	<s>	IDENT
 %token	<s>	INT
@@ -493,9 +502,14 @@ BorderWidth :	BORDERWIDTH Int PopC
 	    ;
 
 BoundBox    :	BOUNDINGBOX Rectangle PopC
+		{$$=$2;}
 	    ;
 
 Cell        :	CELL CellNameDef _Cell PopC
+		{
+		strcpy(LibEntry->Name, $2); 
+		LibEntry->DrawName = 1;
+		}
             ;
 
 _Cell       :	CellType
@@ -545,6 +559,17 @@ _Change :
 	;
 
 Circle :	CIRCLE PointValue PointValue _Circle PopC
+		{
+		 New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                 New->DrawType = CIRCLE_DRAW_TYPE;
+                 New->Pnext = LibEntry->Drawings;
+                 LibEntry->Drawings = New;
+                 New->U.Circ.x = ($2->x  * 100 ) + LibEntry->BBoxMinX;
+                 New->U.Circ.y = LibEntry->BBoxMaxY - ( $2->y * 100 ) ;
+                 New->U.Circ.r = ( $3->x * 100 );
+                 New->U.Circ.width = $3->y;
+                 New->Unit = 0;
+		}
        ;
 
 _Circle :
@@ -710,6 +735,7 @@ _Design :	CellRef
 	;
 
 Designator :	DESIGNATOR _Designator PopC
+		{$$=$2;}
 	   ;
 
 _Designator :	Str
@@ -901,7 +927,9 @@ FigGrpOver :	FIGUREGROUPOVERRIDE _FigGrpOver PopC
 	   ;
 
 _FigGrpOver :	FigGrpNameRef
-		{if(bug>5)fprintf(Error,"_FigGOv %s\n", $1);}
+		{
+		if(bug>5)fprintf(Error,"_FigGOv %s\n", $1);
+		}
 	    |	_FigGrpOver CornerType
 	    |	_FigGrpOver EndType
 	    |	_FigGrpOver PathWidth
@@ -927,12 +955,28 @@ Figure :	FIGURE _Figure PopC
        ;
 
 _Figure :	FigGrpNameDef
-		{if(bug>5)fprintf(Error," _Fig: %s\n", $1);}
+		{
+		if(bug>5)fprintf(Error," _Fig: %s\n", $1);
+		}
 	|	FigGrpOver
 	|	_Figure Circle
 	|	_Figure Dot
 	|	_Figure OpenShape
 	|	_Figure Path
+		{
+		New=(LibraryDrawEntryStruct *)Malloc(sizeof(LibraryDrawEntryStruct));
+		New->DrawType = POLYLINE_DRAW_TYPE;
+		New->U.Poly.width = 0;
+		New->U.Poly.n = 2;
+		Poly = New->U.Poly.PolyList = (int*) Malloc( 4 * sizeof(int) );
+		New->Pnext = LibEntry->Drawings;
+		New->Unit = 0; 
+		LibEntry->Drawings = New;
+		*Poly = $2->xy->x; Poly++;
+		*Poly = $2->xy->y; Poly++;
+		*Poly = $2->nxt->xy->x; Poly++;
+		*Poly = $2->nxt->xy->x; 
+		}
 	|	_Figure Polygon
 	|	_Figure Rectangle
 	|	_Figure Shape
@@ -1127,6 +1171,7 @@ _Interface :
 	   |	_Interface Timing
 	   |	_Interface Simulate
 	   |	_Interface Designator
+		{ strcmp(LibEntry->Prefix, $2); }
 	   |	_Interface Property
 	   |	_Interface Comment
 	   |	_Interface UserData
@@ -1229,6 +1274,14 @@ LibNameRef :	NameRef
 	   ;
 
 Library :	LIBRARY LibNameDef EdifLevel _Library PopC
+		{
+		Lptr = (struct LibraryStruct *)Malloc(sizeof (struct LibraryStruct));
+		strcpy(Lptr->Name, $2);
+		Lptr->NumOfParts = CurrentLib.NumOfParts;
+		Lptr->Entries    = CurrentLib.Entries;
+		Lptr->Pnext = Libs;
+		Libs = Lptr;
+		}
 	;
 
 _Library :	Technology
@@ -1732,6 +1785,7 @@ ParamAssign :	PARAMETERASSIGN ValueNameRef TypedValue PopC
 	    ;
 
 Path :		PATH _Path PopC
+		{$$=$2;}
      ;
 
 _Path :		PointList
@@ -1781,10 +1835,17 @@ _PointDisp :	PointValue
 	   ;
 
 PointList :	POINTLIST _PointList PopC
+		{$$=$2}
 	  ;
 
 _PointList :
+		{$$=NULL;}
 	   |	_PointList PointValue
+		{ 	
+		$$=(struct plst *)Malloc(sizeof(struct plst)); 
+		$$->xy=$2; $$->nxt=$1;
+		$1 = $$;
+		}
 	   ;
 
 PointValue : 	PT Int Int PopC
@@ -1805,16 +1866,38 @@ Port :		PORT _Port PopC
      ;
 
 _Port :		PortNameDef
+		{
+		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                New->DrawType = PIN_DRAW_TYPE;
+                New->Pnext = LibEntry->Drawings;
+                LibEntry->Drawings = New;
+                New->U.Pin.SizeNum = SIZE_PIN_TEXT;
+                New->U.Pin.SizeName = SIZE_PIN_TEXT;
+                New->Unit = 1; 		// PartPerPack-ii;     
+                New->Convert = 0; 	// CurrentConvert;
+                New->U.Pin.PinShape = NONE;	// DOT, CLOCK, SHORT
+                New->U.Pin.Len = 300;
+                New->U.Pin.Orient = PIN_RIGHT;
+                New->U.Pin.Flags = 0;                   /* Pin visible */
+		New->U.Pin.Name = $1;
+		}
       |		_Port Direction
+                {
+		New->U.Pin.PinType = PIN_INPUT;  // fixme $2 
+		}
       |		_Port Unused
       |		_Port PortDelay
       |		_Port Designator
+                {strncpy((char*)&New->U.Pin.Num, $2, 4);}
       |		_Port DcFanInLoad
       |		_Port DcFanOutLoad
       |		_Port DcMaxFanIn
       |		_Port DcMaxFanOut
       |		_Port AcLoad
       |		_Port Property
+                {
+		New->U.Pin.PinShape = DOT;	// DOT, CLOCK, SHORT
+		}
       |		_Port Comment
       |		_Port UserData
       ;
@@ -2020,10 +2103,21 @@ _RangeVector :
 	     ;
 
 Rectangle :	RECTANGLE PointValue _Rectangle PopC
+		{
+		$$=(struct plst *)Malloc(sizeof (struct plst));
+		$$->xy = $2; 
+		$$->nxt = $3;
+		$3 = $$;
+		}
 	  ;
 
 _Rectangle :	PointValue
+		{
+		$$=(struct plst *)Malloc(sizeof (struct plst));
+		$$->xy = $1; $$->nxt = NULL;
+		}
 	   |	_Rectangle Property
+		{$$=$1;}
 	   ;
 
 RectSize  :	RECTANGLESIZE RuleNameDef FigGrpObj _RectSize PopC
@@ -2180,19 +2274,28 @@ Strong :	STRONG LogicNameRef PopC
        ;
 
 Symbol :	SYMBOL _Symbol PopC
+		{CurrentLib.NumOfParts++;}
        ;
 
 _Symbol :
 	|	_Symbol PortImpl
 		{if(bug>5)fprintf(Error," _Sym PortImpl\n");}
 	|	_Symbol Figure
-		{if(bug>5)fprintf(Error," _Sym Figure\n");}
+		{
+		if(bug>5)fprintf(Error," _Sym Figure\n");
+		}
 	|	_Symbol Instance
 		{if(bug>5)fprintf(Error," _Sym Instance\n");}
 	|	_Symbol CommGraph
 	|	_Symbol Annotate
 	|	_Symbol PageSize
 	|	_Symbol BoundBox
+		{
+		LibEntry->BBoxMinX = $2->xy->x;
+		LibEntry->BBoxMaxX = $2->nxt->xy->x;
+		LibEntry->BBoxMinY = $2->xy->y;
+		LibEntry->BBoxMaxY = $2->nxt->xy->y;
+		}
 	|	_Symbol PropDisplay
 	|	_Symbol KeywordDisp
 	|	_Symbol ParamDisp
@@ -3962,7 +4065,7 @@ register char *str;
       	  if (usc->Code == wlk->Context->Code)
       	    break;
       	if (usc){
-      	  sprintf(CharBuf,"'%s' is used more than once within '%s'",
+      	  sprintf(CharBuf,"'%s' is Used more than once within '%s'",
       	    str,CSP->Context->Name);
       	  yyerror(CharBuf);
       	} else {
