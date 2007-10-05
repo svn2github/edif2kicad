@@ -9,8 +9,8 @@
 
 char *InFile = "-";
 
-extern int yydebug;
-int bug;  		// debug level: >2 netlist, >5 schematic, >8 all
+int yydebug=0;
+int bug=3;  		// debug level: 0 off, >2 netlist, >5 schematic, >8 all
 
 char FileNameEdf[64], FileNameNet[64], FileNameLib[64], FileNameEESchema[64];
 FILE * FileEdf, * FileNet, * FileEESchema, * FileLib=NULL;
@@ -23,11 +23,6 @@ main(int argc, char *argv[])
 {
   char * version      = "0.9";
   char * progname;
-
-  Libs=NULL, Entries=NULL;
-  yydebug=0; bug=0;
-//  yydebug=0; bug=3;  
-//  yydebug=1; bug=9;
 
   progname = strrchr(argv[0],'/');
   if (progname)
@@ -42,7 +37,7 @@ main(int argc, char *argv[])
   }
 
   sprintf(FileNameEdf,"%s",argv[1]);
-  sprintf(FileNameLib,"%s.src",argv[1]);
+  sprintf(FileNameLib,"%s.lib",argv[1]);
   if( (FileEdf = fopen( FileNameEdf, "rt" )) == NULL ) {
        printf( " %s non trouve\n", FileNameEdf);
        return(-1);
@@ -67,9 +62,12 @@ main(int argc, char *argv[])
   LibEntry->NumOfUnits = 1;
   LibEntry->Fields = NULL;
   LibEntry->Drawings = NULL;
+  LibEntry->nxt = NULL;
 
-  strncpy(CurrentLib.Name,FileNameLib,40);
-  CurrentLib.NumOfParts=0; CurrentLib.Entries = LibEntry;
+  CurrentLib = (LibraryStruct *) Malloc(sizeof(LibraryStruct));
+  strncpy(CurrentLib->Name,FileNameLib,40);
+  CurrentLib->NumOfParts=0; CurrentLib->Entries = LibEntry;
+  CurrentLib->nxt=NULL;
 
   ParseEDIF(FileEdf, stderr);
 
@@ -90,7 +88,11 @@ main(int argc, char *argv[])
 #endif
 
   printf(" writing %s\n", FileNameLib);
-  SaveActiveLibrary(FileLib, &CurrentLib );
+  Libs = CurrentLib;
+  for( ; Libs != NULL; Libs = Libs->nxt ){
+	// fprintf(FileLib,"### Library: %s ###\n", Libs->Name);
+	SaveActiveLibrary(FileLib, Libs );
+  }
   fclose(FileLib);
 
   printf(" GoodBye\n");

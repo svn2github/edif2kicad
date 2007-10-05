@@ -1,6 +1,13 @@
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	edif.y, e2net, e2sch - Frank Bennett 
 
+	20071005 fwb -  produces almost readable eyespy.lib
+			need to fix:
+			   DRAW
+			   P 0 0 0 0
+			after this error, ok, library browse
+			draws some stuff.
+			need to add curve/arc
 	20071003 fwb -  initial ci e2lib.c
  	20071003 fwb - 	split main out of edif. Now have e2net, e2sch
 			this also might keep the parser clean, which will 

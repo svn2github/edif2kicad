@@ -21,42 +21,59 @@
 #include "ed.h"
 #include "eelibsl.h"
 
+#define DEBUG
 #define SIZE_PIN_TEXT 60
 
 static FILE *Input = NULL;              /* input stream */
 static FILE *Error = NULL;              /* error stream */
+static long LineNumber=1;               /* current input line number */
 
-global char *cur_nnam; 
+global char 	   *cur_nnam; 
 global struct inst *insts, *iptr; 
 global struct con  *cons,  *cptr;
 
-int *Poly;
-LibraryDrawEntryStruct  *New = NULL;
+int  			num, *Poly;
+LibraryDrawEntryStruct   *New=NULL, *INew, *Drawing;
+LibraryFieldEntry        *InsEntry;
+char *bad="Z";
 
 %}
 
-%union    { char *s; int d; struct pt *p; struct plst *pl;}
+%union    { char *s; 
+	    int n; 
+	    struct pt *p; 
+	    struct plst *pl;
+	    struct { char *s; struct pt *p; } *sp;
+	    struct { char *s; struct pt *p; int n;} *spd;
+	    }
 
 %start	Edif
 
-%type   <pl>	Rectangle _Rectangle BoundBox PointList _PointList Path _Path
-%type   <p>	Origin PointValue 
-%type   <d>	Int _Member
+%type   <pl>	Rectangle BoundBox PointList _PointList Path _Path
+%type   <p>	Origin PointValue _Rectangle
+%type   <n>	Int _Member
 
+%type   <s> 	CommGraph _CommGraph 
+%type 	<s>	KeywordDisp _KeywordDisp 
+%type	<s>	PropDisp _PropDisp PropNameRef 
+%type   <s>	StrDisplay _StrDisplay
+
+%type   <s>	Str String _String KeywordName 
 %type   <s>	Ident Name _Name NameDef NameRef 
 %type   <s>	NetNameDef Array
-%type   <s>	CellNameDef CellNameRef CellRef
+%type   <s>	CellNameDef CellNameRef CellRef Cell
 %type   <s>	Rename _Rename __Rename
-%type   <s>	Str StrDisplay _StrDisplay 
-%type   <s>  	KeywordName _KeywordDisp Display _Display
-%type   <s> 	_Orientation 
-%type   <s>	_Figure FigGrpNameDef FigGrpOver _FigGrpOver FigGrpNameRef 
-%type	<s>	PortNameRef PortRef _PortRef Member 
+%type   <s> 	_Orientation _Figure 
+%type   <s>	FigGrp _FigGrp
+%type   <s>	FigGrpNameDef FigGrpOver _FigGrpOver FigGrpNameRef 
 %type   <s>	ViewRef _ViewRef ViewNameRef ViewList _ViewList
 %type   <s>	Comment _Comment
 %type   <s>	Instance _Instance InstanceRef InstNameDef InstNameRef 
-%type   <s>	LibNameDef
+%type   <s>	LibNameDef LibraryRef LibNameRef
 %type   <s>	Designator _Designator PortNameDef
+%type   <s>	_PortImpl _Symbol	
+%type	<s>	PortNameRef PortRef _PortRef Member 
+%type	<s>	Design DesignNameDef
 
 %token	<s>	IDENT
 %token	<s>	INT
@@ -402,6 +419,13 @@ Annotate :	ANNOTATE _Annotate PopC
 
 _Annotate :	Str
 	  |	StrDisplay
+		{
+                New->U.Text.Text = $1;
+		if( $1 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
+		}
+                }
 	  ;
 
 Apply :		APPLY _Apply PopC
@@ -507,12 +531,31 @@ BoundBox    :	BOUNDINGBOX Rectangle PopC
 
 Cell        :	CELL CellNameDef _Cell PopC
 		{
-		strcpy(LibEntry->Name, $2); 
+		$$=$2;
+		strcpy(LibEntry->Name, $2);
 		LibEntry->DrawName = 1;
+		CurrentLib->NumOfParts++;
 		}
             ;
 
 _Cell       :	CellType
+		{
+                LibEntry = (LibraryEntryStruct *) Malloc(sizeof(LibraryEntryStruct));
+                LibEntry->Type = ROOT;
+                LibEntry->PrefixSize = DEFAULT_SIZE_TEXT;
+                LibEntry->PrefixPosY = PIN_WIDTH;
+                LibEntry->NamePosY   = -PIN_WIDTH;
+                LibEntry->NameSize   = DEFAULT_SIZE_TEXT;
+                LibEntry->DrawPrefix = 1;
+                LibEntry->TextInside = 30;
+                LibEntry->DrawPinNum = 1;
+                LibEntry->DrawPinName = 1;
+                LibEntry->NumOfUnits = 1;
+		LibEntry->Fields = NULL;
+                strcpy(LibEntry->Prefix, "U");
+                LibEntry->nxt = CurrentLib->Entries;
+                CurrentLib->Entries = LibEntry;
+		}
             |	_Cell Status
             |	_Cell ViewMap
             |	_Cell View
@@ -522,19 +565,37 @@ _Cell       :	CellType
             ;
 
 CellNameDef :	NameDef
-		{if(bug>4)fprintf(Error,"\nCellNameDef: '%s'\n", $1);}
-	    ;
-
-CellRef     :	CELLREF CellNameRef _CellRef PopC
-		{$$=$2;}
-	    ;
-
-_CellRef    :
-	    |	LibraryRef
+		{ if(bug>4)fprintf(Error,"\nCellNameDef: '%s'\n", $1); }
 	    ;
 
 CellNameRef :	NameRef
 		{if(bug>4)fprintf(Error,"\nCellNameRef: '%15s' ", $1);}
+	    ;
+
+CellRef     :	CELLREF CellNameRef _CellRef PopC
+		{$$=$2; if(bug>2)fprintf(Error,"\nCellRef: '%s'\n", $2); 
+		// Instance
+                LibEntry = (LibraryEntryStruct *) Malloc(sizeof(LibraryEntryStruct));
+                LibEntry->Type = ROOT;
+                LibEntry->PrefixSize = DEFAULT_SIZE_TEXT;
+                LibEntry->PrefixPosY = PIN_WIDTH;
+                LibEntry->NamePosY   = -PIN_WIDTH;
+                LibEntry->NameSize   = DEFAULT_SIZE_TEXT;
+                LibEntry->DrawPrefix = 1;
+                LibEntry->TextInside = 30;
+                LibEntry->DrawPinNum = 1;
+                LibEntry->DrawPinName = 1;
+                LibEntry->NumOfUnits = 1;
+		LibEntry->Fields = NULL;
+                strcpy(LibEntry->Prefix, "U");
+                strcpy(LibEntry->Name, $2);
+                LibEntry->nxt = CurrentLib->Entries;
+                CurrentLib->Entries = LibEntry;
+		}
+	    ;
+
+_CellRef    :
+	    |	LibraryRef
 	    ;
 
 CellType    :	CELLTYPE _CellType PopC
@@ -561,8 +622,8 @@ _Change :
 Circle :	CIRCLE PointValue PointValue _Circle PopC
 		{
 		 New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
-                 New->DrawType = CIRCLE_DRAW_TYPE;
-                 New->Pnext = LibEntry->Drawings;
+                 New->DrawType = CIRCLE_DRAW_TYPE; New->Convert =0;
+                 New->nxt = LibEntry->Drawings;
                  LibEntry->Drawings = New;
                  New->U.Circ.x = ($2->x  * 100 ) + LibEntry->BBoxMinX;
                  New->U.Circ.y = LibEntry->BBoxMaxY - ( $2->y * 100 ) ;
@@ -589,9 +650,11 @@ _Comment :	Str
 	 ;
 
 CommGraph :	COMMENTGRAPHICS _CommGraph PopC
+		{$$=$2;}
           ;
 
 _CommGraph :
+		{$$=NULL;}
 	   |	_CommGraph Annotate
 	   |	_CommGraph Figure
 	   |	_CommGraph Instance
@@ -716,31 +779,47 @@ _Delta :
        |	_Delta PointValue
        ;
 
-Derivation :	DERIVATION _Derivation PopC
-	   ;
+Derivation  :	DERIVATION _Derivation PopC
+	    ;
 
 _Derivation :	CALCULATED
 	    |	MEASURED
 	    |	REQUIRED
 	    ;
 
-Design :	DESIGN DesignNameDef _Design PopC
-       ;
+Design 	    :	DESIGN DesignNameDef _Design PopC
+		{$$=$2; if(bug>0)fprintf(Error,"Design: '%s'\n", $2); 
+		Lptr = (struct LibraryStruct *)Malloc(sizeof (struct LibraryStruct));
+		strcpy(Lptr->Name, $2);
+		Lptr->NumOfParts = CurrentLib->NumOfParts;
+		Lptr->Entries    = CurrentLib->Entries;
+		Lptr->nxt 	 = CurrentLib;
+		CurrentLib 	 = Lptr;
+		}
+       	    ;
 
-_Design :	CellRef
-	|	_Design Status
-	|	_Design Comment
-	|	_Design Property
-	|	_Design UserData
-	;
+_Design     :	CellRef
+	    |	_Design Status
+	    |	_Design Comment
+	    |	_Design Property
+	    |	_Design UserData
+	    ;
 
-Designator :	DESIGNATOR _Designator PopC
+Designator  :	DESIGNATOR _Designator PopC
 		{$$=$2;}
-	   ;
+	    ;
 
 _Designator :	Str
 		{if(bug>4)fprintf(Error,"-%s\n",$1);}
 	    |	StrDisplay
+                {
+                New->U.Text.Text = $1;
+		if( $1 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
+		}
+                }
+
 	    ;
 
 DesignNameDef :	NameDef
@@ -784,7 +863,6 @@ _Direction  :	INOUT
 	    ;
 
 Display     :	DISPLAY _Display _DisplayJust _DisplayOrien _DisplayOrg PopC
-		{$$=$2; if(bug>5)fprintf(Error," Display: %s\n", $2);}
    	    ;
 
 _Display    :	FigGrpNameRef
@@ -889,7 +967,11 @@ Fabricate :	FABRICATE LayerNameDef FigGrpNameRef PopC
 False :		FALSE PopC
       ;
 
+FigGrpNameDef :	NameDef
+	      ;
+
 FigGrp :	FIGUREGROUP _FigGrp PopC
+		{$$=$2;}
        ;
 
 _FigGrp :	FigGrpNameDef
@@ -908,9 +990,6 @@ _FigGrp :	FigGrpNameDef
 	|	_FigGrp IncFigGrp
 	;
 
-FigGrpNameDef :	NameDef
-	      ;
-
 FigGrpNameRef :	NameRef
 	      ;
 
@@ -927,9 +1006,6 @@ FigGrpOver :	FIGUREGROUPOVERRIDE _FigGrpOver PopC
 	   ;
 
 _FigGrpOver :	FigGrpNameRef
-		{
-		if(bug>5)fprintf(Error,"_FigGOv %s\n", $1);
-		}
 	    |	_FigGrpOver CornerType
 	    |	_FigGrpOver EndType
 	    |	_FigGrpOver PathWidth
@@ -956,29 +1032,48 @@ Figure :	FIGURE _Figure PopC
 
 _Figure :	FigGrpNameDef
 		{
-		if(bug>5)fprintf(Error," _Fig: %s\n", $1);
+		New=(LibraryDrawEntryStruct *)Malloc(sizeof(LibraryDrawEntryStruct));
+		New->DrawType = POLYLINE_DRAW_TYPE; New->Convert =0;
+		New->U.Poly.width = 0;
+		New->nxt = LibEntry->Drawings;
+		New->Unit = 0; 
+		LibEntry->Drawings = New;
 		}
 	|	FigGrpOver
+		{
+		New=(LibraryDrawEntryStruct *)Malloc(sizeof(LibraryDrawEntryStruct));
+		New->DrawType = POLYLINE_DRAW_TYPE; New->Convert =0;
+		New->U.Poly.width = 0;
+		New->nxt = LibEntry->Drawings;
+		New->Unit = 0; 
+		LibEntry->Drawings = New;
+		}
 	|	_Figure Circle
 	|	_Figure Dot
 	|	_Figure OpenShape
 	|	_Figure Path
 		{
-		New=(LibraryDrawEntryStruct *)Malloc(sizeof(LibraryDrawEntryStruct));
-		New->DrawType = POLYLINE_DRAW_TYPE;
-		New->U.Poly.width = 0;
-		New->U.Poly.n = 2;
+		New->U.Poly.n = 2;		// fixme for multi-point
 		Poly = New->U.Poly.PolyList = (int*) Malloc( 4 * sizeof(int) );
-		New->Pnext = LibEntry->Drawings;
-		New->Unit = 0; 
-		LibEntry->Drawings = New;
-		*Poly = $2->xy->x; Poly++;
-		*Poly = $2->xy->y; Poly++;
-		*Poly = $2->nxt->xy->x; Poly++;
-		*Poly = $2->nxt->xy->x; 
+		*Poly = (int)( $2->xy->x * 100 )      + LibEntry->BBoxMinX; 	       Poly++;
+                *Poly = LibEntry->BBoxMaxY            - (int)( $2->xy->y * 100 );      Poly++;
+                *Poly = (int)( $2->nxt->xy->x * 100 ) + LibEntry->BBoxMinX; 	       Poly++;
+                *Poly = LibEntry->BBoxMaxY            - (int)( $2->nxt->xy->y * 100 ); Poly++;
 		}
 	|	_Figure Polygon
 	|	_Figure Rectangle
+		{
+		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                New->DrawType = SQUARE_DRAW_TYPE; New->Convert =0;
+                New->U.Sqr.width = 0;
+                New->nxt = LibEntry->Drawings;
+                New->U.Sqr.x1 = LibEntry->BBoxMinX;
+                New->U.Sqr.y1 = LibEntry->BBoxMinY;
+                New->U.Sqr.x2 = LibEntry->BBoxMaxX;
+                New->U.Sqr.y2 = LibEntry->BBoxMaxY;
+                New->Unit = 0; 
+		LibEntry->Drawings = New;
+		}
 	|	_Figure Shape
 	|	_Figure Comment
 	|	_Figure UserData
@@ -1075,9 +1170,17 @@ Initial :	INITIAL PopC
 
 Instance :	INSTANCE InstNameDef _Instance PopC
 		{
-		$$=$2;
-		if(bug>2)fprintf(Error," InstNameDef: %s\n", $2);
-		iptr->ins = $2;
+		$$=$2; if(bug>2)fprintf(Error,"\nInstNameDef: %s\n", $2);
+
+		strcpy(LibEntry->Name, $2);
+                LibEntry->DrawName = 1;
+                CurrentLib->NumOfParts++;
+
+		INew->U.Text.Text = $2;
+		if( $2 != NULL ){
+                    INew->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    INew->U.Text.y += New->U.Text.size / 2;
+		}
 		}
 	 ;
 
@@ -1171,7 +1274,9 @@ _Interface :
 	   |	_Interface Timing
 	   |	_Interface Simulate
 	   |	_Interface Designator
-		{ strcmp(LibEntry->Prefix, $2); }
+		{
+ 		strcpy(LibEntry->Prefix, $2); 
+		}
 	   |	_Interface Property
 	   |	_Interface Comment
 	   |	_Interface UserData
@@ -1239,11 +1344,13 @@ _Justify :	CENTERCENTER
 	 ;
 
 KeywordDisp :	KEYWORDDISPLAY _KeywordDisp PopC
+		{$$=$2; if(bug>2)fprintf(Error," KeywDisp: %s ",$2);}
 	    ;
 
 _KeywordDisp :	KeywordName
-		{if(bug>5)fprintf(Error," KeywNam: %s ",$1);}
+		{ if(bug>4)fprintf(Error," KeywNam: %s ",$1); }
 	     |	_KeywordDisp Display
+		{$$=$1;}
 	     ;
 
 KeywordLevel :	KEYWORDLEVEL Int PopC
@@ -1269,18 +1376,15 @@ LibNameDef :	NameDef
 		{if(bug>5)fprintf(Error,"LibNameDef: %s\n", $1);}
 	   ;
 
-LibNameRef :	NameRef
-		{if(bug>5)fprintf(Error," LibNameRef: %s\n", $1);}
-	   ;
-
 Library :	LIBRARY LibNameDef EdifLevel _Library PopC
 		{
+		if(bug>2)fprintf(Error,"Library: %s\n", $2);
 		Lptr = (struct LibraryStruct *)Malloc(sizeof (struct LibraryStruct));
 		strcpy(Lptr->Name, $2);
-		Lptr->NumOfParts = CurrentLib.NumOfParts;
-		Lptr->Entries    = CurrentLib.Entries;
-		Lptr->Pnext = Libs;
-		Libs = Lptr;
+		Lptr->NumOfParts = CurrentLib->NumOfParts;
+		Lptr->Entries    = CurrentLib->Entries;
+		Lptr->nxt 	 = CurrentLib;
+		CurrentLib 	 = Lptr;
 		}
 	;
 
@@ -1291,7 +1395,13 @@ _Library :	Technology
 	 |	_Library UserData
 	 ;
 
+LibNameRef :	NameRef
+		{if(bug>4)fprintf(Error," LibNameRef: %s\n", $1);
+		}
+	   ;
+
 LibraryRef :	LIBRARYREF LibNameRef PopC
+		{ $$=$2; }
 	   ;
 
 ListOfNets :	LISTOFNETS _ListOfNets PopC
@@ -1517,7 +1627,7 @@ Name 	  :	NAME _Name PopC
      	  ;
 
 _Name :		Ident
-		{$$=$1;}
+		{ if(bug>4)fprintf(Error," Ident: %s ",$1); }
       |		_Name Display
 		{$$=$1;}
       ;
@@ -1527,7 +1637,7 @@ NameDef :	Ident
 	|	Name
 		{if(bug>5)fprintf(Error,"NameDef: %s\n", $1);}
 	|	Rename
-		{if(bug>5)fprintf(Error,"NameDef: %s\n", $1);}
+		{if(bug>4)fprintf(Error,"NameDef: %s\n", $1);}
 	;
 
 NameRef :	Ident
@@ -1600,14 +1710,14 @@ _NetMap :
 
 NetNameDef :	NameDef
 		{
-		if(bug>2)fprintf(Error,"\nNetNameDef: %s\n", $1);
+		if(bug>4)fprintf(Error,"\nNetNameDef: %s\n", $1);
 		cur_nnam = $1;
 		}
 	   |	Array
 	   ;
 
 NetNameRef :	NameRef
-		{if(bug>2)fprintf(Error," NetNameRef: %s\n", $1);}
+		{if(bug>4)fprintf(Error," NetNameRef: %s\n", $1);}
 	   |	Member
 	   ;
 
@@ -1716,7 +1826,20 @@ _Orientation :	R0
 	     ;
 
 Origin       :	ORIGIN PointValue PopC
-		{$$=$2; if(bug>5)fprintf(Error,"Org: %d %d\n", $2->x, $2->y);}
+		{
+		if(bug>2)fprintf(Error,"\nOrg: %d %d\n", $2->x, $2->y);
+                New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                New->DrawType = TEXT_DRAW_TYPE; New->Convert =0;
+                New->nxt = LibEntry->Drawings;
+                LibEntry->Drawings = New;
+		New->U.Text.Horiz =1; 
+                New->U.Text.x = (int)( $2->x * 100 ) + LibEntry->BBoxMinX;
+                New->U.Text.y = LibEntry->BBoxMaxY - (int)( $2->y * 100 );
+                New->U.Text.size = DEFAULT_SIZE_TEXT;
+                New->U.Text.type = 0;
+		New->U.Text.Text = bad;		// fixme
+                New->Unit = 0;
+                }
              ;
 
 OverhngDist :	OVERHANGDISTANCE RuleNameDef FigGrpObj FigGrpObj _OverhngDist
@@ -1868,17 +1991,17 @@ Port :		PORT _Port PopC
 _Port :		PortNameDef
 		{
 		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
-                New->DrawType = PIN_DRAW_TYPE;
-                New->Pnext = LibEntry->Drawings;
+                New->DrawType = PIN_DRAW_TYPE; New->Convert =0;
+                New->nxt = LibEntry->Drawings;
                 LibEntry->Drawings = New;
-                New->U.Pin.SizeNum = SIZE_PIN_TEXT;
+                New->U.Pin.SizeNum  = SIZE_PIN_TEXT;
                 New->U.Pin.SizeName = SIZE_PIN_TEXT;
-                New->Unit = 1; 		// PartPerPack-ii;     
-                New->Convert = 0; 	// CurrentConvert;
+                New->Unit = 1; 			// PartPerPack-ii;     
+                New->Convert = 0; 		// CurrentConvert;
                 New->U.Pin.PinShape = NONE;	// DOT, CLOCK, SHORT
                 New->U.Pin.Len = 300;
                 New->U.Pin.Orient = PIN_RIGHT;
-                New->U.Pin.Flags = 0;                   /* Pin visible */
+                New->U.Pin.Flags = 0;           /* Pin visible */
 		New->U.Pin.Name = $1;
 		}
       |		_Port Direction
@@ -1888,7 +2011,9 @@ _Port :		PortNameDef
       |		_Port Unused
       |		_Port PortDelay
       |		_Port Designator
-                {strncpy((char*)&New->U.Pin.Num, $2, 4);}
+                {
+		strncpy((char*)&New->U.Pin.Num, $2, 4);
+		}
       |		_Port DcFanInLoad
       |		_Port DcFanOutLoad
       |		_Port DcMaxFanIn
@@ -1947,20 +2072,35 @@ PortImpl :	PORTIMPLEMENTATION _PortImpl PopC
 	 ;
 
 _PortImpl :	Name
-		{if(bug>5)fprintf(Error," _PortImpl Name %s\n", $1);}
+		{if(bug>4)fprintf(Error," _PortImpl Name %s\n", $1);}
 	  |	Ident
-		{if(bug>5)fprintf(Error," _PortImpl Ident %s\n", $1);}
+		{if(bug>4)fprintf(Error," _PortImpl Ident %s\n", $1);}
 	  |	_PortImpl ConnectLoc
-		{if(bug>5)fprintf(Error," _PortImpl ConnLoc \n");}
+		{if(bug>4)fprintf(Error," _PortImpl ConnLoc \n");}
 	  |	_PortImpl Figure
-		{if(bug>5)fprintf(Error," _PortImpl Figure \n");}
+		{if(bug>4)fprintf(Error," _PortImpl Figure \n");}
 	  |	_PortImpl Instance
-		{if(bug>5)fprintf(Error," _PortImpl Instance \n");}
+		{if(bug>4)fprintf(Error," _PortImpl Instance \n");}
 	  |	_PortImpl CommGraph
-	  |	_PortImpl PropDisplay
+		{if(bug>2)fprintf(Error," _PortImpl CommGraph \n");}
+	  |	_PortImpl PropDisp
+		{if(bug>2)fprintf(Error," _PortImpl PropDisp %s\n", $1); 
+		New->U.Text.Text = $1;
+		if( $1 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
+		}
+		}
 	  |	_PortImpl KeywordDisp
-		{if(bug>5)fprintf(Error," _PortImpl KeywD \n");}
+		{if(bug>2)fprintf(Error," _PortImpl KeywDisp %s\n", $1); 
+		New->U.Text.Text = $1;
+		if( $1 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
+		}
+		}
 	  |	_PortImpl Property
+		{if(bug>4)fprintf(Error," _PortImpl Property \n");}
 	  |	_PortImpl UserData
 	  |	_PortImpl Comment
 	  ;
@@ -2015,8 +2155,7 @@ PortNameRef :	NameRef
 
 PortRef     :	PORTREF PortNameRef _PortRef PopC
 		{
-		$$=$2; 
-		if($3 != NULL && bug>2)fprintf(Error,"PortRef: %s\n", $2);
+		$$=$2; if($3 != NULL && bug>4)fprintf(Error,"PortRef: %s\n", $2);
 		if(cptr != NULL)  // InstRef usually first
             	  cptr->pin = $2;
 		}
@@ -2026,14 +2165,6 @@ _PortRef :
 		{$$=NULL;}
 	 |	PortRef
 	 |	InstanceRef
-		{
-		if(bug>2)fprintf(Error,"InstRef: %8s ", $1);
-		cptr = (struct con *) malloc (sizeof (struct con));
-            	cptr->ref = $1;
-            	cptr->nnam = cur_nnam;
-            	cptr->nxt = cons;
-		cons = cptr;
-		}
 	 |	ViewRef
 	 ;
 
@@ -2044,15 +2175,28 @@ _Program :
 	 |	Version
 	 ;
 
-PropDisplay :	PROPERTYDISPLAY _PropDisplay PopC
-	    ;
+PropDisp  :	PROPERTYDISPLAY _PropDisp PopC
+		{$$=$2; }
+    	  ;
 
-_PropDisplay :	PropNameRef
-	     |	_PropDisplay Display
+_PropDisp    :	PropNameRef
+		{ if(bug>4)fprintf(Error," PropNameRef: %s ",$1); }
+	     |	_PropDisp Display
+		{$$=$1;
+                New->U.Text.Text = $1;
+                if( $1 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
+		}
+		}
 	     ;
 
-Property :	PROPERTY PropNameDef _Property PopC
-	 ;
+PropNameDef :	NameDef
+		{if(bug>5)fprintf(Error," PropNameDef: %s\n", $1); }
+	    ;
+
+Property  :	PROPERTY PropNameDef _Property PopC
+	  ;
 
 _Property :	TypedValue
 	  |	_Property Owner
@@ -2060,10 +2204,6 @@ _Property :	TypedValue
 	  |	_Property Property
 	  |	_Property Comment
 	  ;
-
-PropNameDef :	NameDef
-		{if(bug>5)fprintf(Error," PropNameDef: %s\n", $1);}
-	    ;
 
 PropNameRef :	NameRef
 		{if(bug>5)fprintf(Error," PropNameRef: %s ", $1);}
@@ -2078,7 +2218,7 @@ _ProtectFrame :
 	      |	_ProtectFrame Instance
 	      |	_ProtectFrame CommGraph
 	      |	_ProtectFrame BoundBox
-	      |	_ProtectFrame PropDisplay
+	      |	_ProtectFrame PropDisp
 	      |	_ProtectFrame KeywordDisp
 	      |	_ProtectFrame ParamDisp
 	      |	_ProtectFrame Property
@@ -2104,18 +2244,15 @@ _RangeVector :
 
 Rectangle :	RECTANGLE PointValue _Rectangle PopC
 		{
-		$$=(struct plst *)Malloc(sizeof (struct plst));
-		$$->xy = $2; 
-		$$->nxt = $3;
-		$3 = $$;
+		// for e2lib
+                LibEntry->BBoxMinX = $2->x;
+                LibEntry->BBoxMaxX = $3->x;
+                LibEntry->BBoxMinY = $2->y;
+                LibEntry->BBoxMaxY = $3->y;
 		}
 	  ;
 
 _Rectangle :	PointValue
-		{
-		$$=(struct plst *)Malloc(sizeof (struct plst));
-		$$->xy = $1; $$->nxt = NULL;
-		}
 	   |	_Rectangle Property
 		{$$=$1;}
 	   ;
@@ -2130,7 +2267,7 @@ _RectSize :	RangeVector
 	  ;
 
 Rename 	  :	RENAME __Rename _Rename PopC
-		{$$=$2;}
+		{$$=$2; if(bug>4)fprintf(Error,"ReName '%s'-'%s' ",$2,$3);}
        	  ;
 
 __Rename  :	Ident
@@ -2139,6 +2276,13 @@ __Rename  :	Ident
 
 _Rename   :	Str
 	  |	StrDisplay
+                {
+                New->U.Text.Text = $1;
+		if( $1 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
+		}
+                }
 	  ;
 
 Resolves  :	RESOLVES _Resolves PopC
@@ -2254,53 +2398,78 @@ _Steady :	Duration
 	;
 
 StrDisplay :	STRINGDISPLAY _StrDisplay PopC
-		{$$=$2;}
+		{$$=$2;if(bug>2)fprintf(Error,"StrDisplay: %s ",$2); }
 	   ;
 
+_StrDisplay :	Str
+		{ if(bug>4)fprintf(Error," Str: %s \n",$1); }
+	    |	_StrDisplay Display
+		{ $$=$1;}
+	    ;
+
 String :	STRING _String PopC
+		{$$=$2; if(bug>4)fprintf(Error,"STRING:%d '%s'\n",LineNumber, $2); }
        ;
 
 _String :
+		{$$=NULL;}
 	|	_String Str
+		{$$=$2;}
 	|	_String StrDisplay
+		{$$=$2;
+                New->U.Text.Text = $2;
+		if( $2 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
+		}
+                }
 	|	_String String
+		{$$=$2;}
 	;
-
-_StrDisplay :	Str
-	    |	_StrDisplay Display
-	    ;
 
 Strong :	STRONG LogicNameRef PopC
        ;
 
 Symbol :	SYMBOL _Symbol PopC
-		{CurrentLib.NumOfParts++;}
        ;
 
 _Symbol :
+		{$$=NULL;}
 	|	_Symbol PortImpl
-		{if(bug>5)fprintf(Error," _Sym PortImpl\n");}
+		{ if(bug>2)fprintf(Error," _Sym PortImpl\n"); }
 	|	_Symbol Figure
-		{
-		if(bug>5)fprintf(Error," _Sym Figure\n");
-		}
+		{ if(bug>2)fprintf(Error," _Sym Figure\n"); }
 	|	_Symbol Instance
-		{if(bug>5)fprintf(Error," _Sym Instance\n");}
+		{ if(bug>2)fprintf(Error," _Sym Instance\n"); }
 	|	_Symbol CommGraph
 	|	_Symbol Annotate
+		{ if(bug>2)fprintf(Error," _Sym Annotate\n"); }
 	|	_Symbol PageSize
 	|	_Symbol BoundBox
+	|	_Symbol PropDisp
 		{
-		LibEntry->BBoxMinX = $2->xy->x;
-		LibEntry->BBoxMaxX = $2->nxt->xy->x;
-		LibEntry->BBoxMinY = $2->xy->y;
-		LibEntry->BBoxMaxY = $2->nxt->xy->y;
+		if(bug>2)fprintf(Error," _Sym PropD '%s'\n", $1); 
+		New->U.Text.Text = $1;
+		if( $1 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
 		}
-	|	_Symbol PropDisplay
+		}
 	|	_Symbol KeywordDisp
+		{
+		if(bug>2)fprintf(Error," _Sym KeywD '%s'\n", $1); 
+		New->U.Text.Text = $1;
+		if( $1 != NULL ){
+                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                    New->U.Text.y += New->U.Text.size / 2;
+		}
+		}
 	|	_Symbol ParamDisp
+		{if(bug>2)fprintf(Error," _Sym ParamDisp \n");}
 	|	_Symbol Property
+		{if(bug>2)fprintf(Error," _Sym Property \n");}
 	|	_Symbol Comment
+		{if(bug>2)fprintf(Error," _Sym Comment \n");}
 	|	_Symbol UserData
 	;
 
@@ -2374,6 +2543,9 @@ _Timing :	Derivation
 	;
 
 Transform :	TRANSFORM _TransX _TransY _TransDelta _TransOrien _TransOrg
+		{
+		INew = New;	// Instance position
+		}
 		PopC
 	  ;
 
@@ -2507,7 +2679,7 @@ _ViewList :
 	  |	_ViewList ViewRef
 		{$$=$2;}
 	  |	_ViewList ViewList
-		{$$=$2;}
+		{$$=$1;}
 	  ;
 
 ViewMap :	VIEWMAP _ViewMap PopC
@@ -2534,7 +2706,8 @@ ViewNameRef :	NameRef
 
 ViewRef :	VIEWREF ViewNameRef _ViewRef PopC
 		{
-		$$=$2; if(bug>2)fprintf(Error,"ViewRef: %25s ", $3);
+		$$=$2; if(bug>4)fprintf(Error,"ViewRef: %25s ", $3);
+
 		iptr = (struct inst *)Malloc(sizeof (struct inst));
 		iptr->sym = $3;
 		iptr->nxt = insts;
@@ -2608,15 +2781,15 @@ _Written :	TimeStamp
 	 ;
 
 Ident    :	IDENT
-		{ if(bug>8)fprintf(Error,"ID:%s\n",$1); }
+		{ if(bug>4)fprintf(Error,"ID:%s\n",$1); }
          ;
 
 Str      :	STR
-		{ if(bug>8)fprintf(Error,"STR:%s\n",$1); }
+		{ if(bug>4)fprintf(Error,"STR:%d '%s'\n",LineNumber, $1); }
          ;
 
 Int 	 :	INT
-		{$$=atoi($1); Free($1);}
+		{sscanf($1,"%d",&num); $$=num;  Free($1);}
     	 ;
 
 Keyword :	KEYWORD
@@ -2649,7 +2822,6 @@ typedef struct ContextCar {
  *	Parser state variables.
  */
 extern char *InFile;			/* file name on the input stream */
-static long LineNumber;			/* current input line number */
 static ContextCar *CSP = NULL;		/* top of context stack */
 static char yytext[IDENT_LENGTH + 1];	/* token buffer */
 static char CharBuf[IDENT_LENGTH + 1];	/* garbage buffer */

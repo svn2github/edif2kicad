@@ -82,30 +82,17 @@ typedef enum
 	SHEET_NAME		/* Champ Name Schema componant, i.e. "cnt16.sch" */
 	} NumFieldType;
 
-typedef struct LibraryDrawPin {
-	int posX, posY;			/* Position du point de reference de la Pin */
-	short Len;			/* longueur de la Pin */
-	short Orient;			/* Orientation de la Pin (Up, Down, Left, Right) */
-	short PinShape;			/* Bit a bit: forme de la pin (voir enum prec) */
-	char PinType;			/* type electrique de la pin */
-	char Flags;			/* bit 0 != 0: pin invisible */
-	int Num;			/* numero / ref grid array, si .Num < 0 */
-	char * Name;
-	short SizeNum, SizeName;	/* taille des num pin et name pin */
-	} LibraryDrawPin;
-
 typedef struct LibraryFieldEntry	/* Fields auxiliaires identiques aux fields
 						des composants, pouvant etre predefinis en lib */
 	{
 	int StructType;
-	struct LibraryFieldEntry *Pnext;
 	int FieldId;			/* 1 a 11, mais usuellement MODULE_PCB et SHEET_PART */
 	int PosX, PosY, Size;
 	int Orient;			 /* Orientation */
 	int Flags;			 /* Attributs (Non visible ...) */
 	char *Text;			 /* Pointeur sur le texte */
+	struct LibraryFieldEntry *nxt;
 	}LibraryFieldEntry;
-
 
 /* Structures de dessin des composants : */
 
@@ -144,15 +131,27 @@ typedef struct LibraryDrawSquare {
 	int x1, y1, x2, y2, width;
 } LibraryDrawSquare;
 
-typedef struct LibraryDrawSegment {
-	int x1, y1, x2, y2, width;
-} LibraryDrawSegment;
-
 typedef struct LibraryDrawPolyline {
 	int n, *PolyList;
 	BooleanType Fill;
 	int width;
 } LibraryDrawPolyline;
+
+typedef struct LibraryDrawSegment {
+	int x1, y1, x2, y2, width;
+} LibraryDrawSegment;
+
+typedef struct LibraryDrawPin {
+	int posX, posY;			/* Position du point de reference de la Pin */
+	short Len;			/* longueur de la Pin */
+	short Orient;			/* Orientation de la Pin (Up, Down, Left, Right) */
+	short PinShape;			/* Bit a bit: forme de la pin (voir enum prec) */
+	char PinType;			/* type electrique de la pin */
+	char Flags;			/* bit 0 != 0: pin invisible */
+	int Num;			/* numero / ref grid array, si .Num < 0 */
+	char * Name;
+	short SizeNum, SizeName;	/* taille des num pin et name pin */
+	} LibraryDrawPin;
 
 typedef struct LibraryDrawEntryStruct {
 	int DrawType;
@@ -167,7 +166,7 @@ typedef struct LibraryDrawEntryStruct {
 	LibraryDrawSegment Segm;
 	LibraryDrawPin Pin;
 	} U;
-	struct LibraryDrawEntryStruct *Pnext;
+	struct LibraryDrawEntryStruct *nxt;
 } LibraryDrawEntryStruct;
 
 typedef struct LibraryEntryStruct {
@@ -184,25 +183,22 @@ typedef struct LibraryEntryStruct {
 	LibraryFieldEntry *Fields;			/* Liste des Champs auxiliaires */
 	LibraryDrawEntryStruct *Drawings;		/* How to draw this part */
 	int BBoxMinX, BBoxMaxX, BBoxMinY, BBoxMaxY;	/* BBox around the part. */
+	struct LibraryEntryStruct *nxt;
 } LibraryEntryStruct;
 
 typedef struct LibraryStruct {
 	char Name[41];				/* Name of library loaded. */
 	int NumOfParts;				/* Number of parts this library has. */
 	struct LibraryEntryStruct *Entries;	/* Parts themselves are saved here. */
-	struct LibraryStruct *Pnext;		/* Point on next lib in chain. */
+	struct LibraryStruct *nxt;		/* Point on next lib in chain. */
 } LibraryStruct;
-
-
-/* Variables */
-extern LibraryStruct *LibraryList;		   	/* All part libs are saved here. */
-
 
 #endif // EELIBSL_H
 
-global LibraryStruct      *Libs, *Lptr, CurrentLib;
-global LibraryDrawEntryStruct  *Drawing;
-global LibraryEntryStruct *Entries, *Eptr, *LibEntry;
+global LibraryStruct          	*Libs, *Lptr, *CurrentLib;
+global LibraryEntryStruct 	*LibEntry;
+global LibraryDrawEntryStruct 	*Drawing;
+global LibraryFieldEntry	*InsEntry;
 
 /*
 ViewRef :       VIEWREF ViewNameRef _ViewRef PopC

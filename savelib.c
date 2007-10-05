@@ -29,22 +29,16 @@ int ii;
 
 	/* Creation de l'entete de la librairie */
 	fprintf(SaveFile,"%s Version 1.0\n", FILE_IDENT);
+	fprintf(SaveFile,"### Library: %s ###\n", CurrentLib->Name);
 
-	/* Sauvegarde des composant: */
-	// PQCompFunc((PQCompFuncType) LibraryEntryCompare);
-	// LibEntry = (LibraryEntryStruct *) PQFirst(&CurrentLib->Entries, FALSE);
 	LibEntry = (LibraryEntryStruct *) CurrentLib->Entries;
-	for( ii = CurrentLib->NumOfParts ; ii > 0; ii-- )
-		{
-		if(LibEntry != NULL)
-			{
+	for( ii = CurrentLib->NumOfParts ; ii > 0; ii-- ) {
+		if(LibEntry != NULL) {
 			WriteOneLibEntry(SaveFile, LibEntry);
 			fprintf(SaveFile,"#\n");
 			}
 		else break;
-		LibEntry = (LibraryEntryStruct *) CurrentLib->Pnext;
-		// LibEntry = (LibraryEntryStruct *)
-		// 		PQNext(CurrentLib->Entries, LibEntry, NULL);
+		LibEntry = (LibraryEntryStruct *) LibEntry->nxt;
 		}
 
 	fprintf(SaveFile,"#End Library\n");
@@ -105,7 +99,7 @@ char FlagXpin = 0;
 				LibEntry->NameOrient == 0 ? 'H' : 'V',
 				LibEntry->DrawName ? 'V' : 'I' );
 
-	for ( Field = LibEntry->Fields; Field!= NULL; Field = Field->Pnext )
+	for ( Field = LibEntry->Fields; Field!= NULL; Field = Field->nxt )
 		{
 		if( Field->Text == NULL ) continue;
 		if( strlen(Field->Text) == 0 ) continue;
@@ -236,7 +230,7 @@ char FlagXpin = 0;
 					break;
 				}
 
-			DrawEntry = DrawEntry->Pnext;
+			DrawEntry = DrawEntry->nxt;
 			}
 		fprintf(ExportFile,"ENDDRAW\n");
 		}
