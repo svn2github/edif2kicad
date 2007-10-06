@@ -36,6 +36,7 @@ int  			num, *Poly;
 LibraryDrawEntryStruct   *New=NULL, *INew, *Drawing;
 LibraryFieldEntry        *InsEntry;
 char *bad="Z";
+struct plst *pl;
 
 %}
 
@@ -49,8 +50,9 @@ char *bad="Z";
 
 %start	Edif
 
-%type   <pl>	Rectangle BoundBox PointList _PointList Path _Path
-%type   <p>	Origin PointValue _Rectangle
+%type   <pl>	Rectangle BoundBox PointList _PointList Path _Path Polygon _Polygon 
+%type 	<pl>	Circle 
+%type   <p>	Origin PointValue _Rectangle Dot _Dot
 %type   <n>	Int _Member
 
 %type   <s> 	CommGraph _CommGraph 
@@ -621,15 +623,10 @@ _Change :
 
 Circle :	CIRCLE PointValue PointValue _Circle PopC
 		{
-		 New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
-                 New->DrawType = CIRCLE_DRAW_TYPE; New->Convert =0;
-                 New->nxt = LibEntry->Drawings;
-                 LibEntry->Drawings = New;
-                 New->U.Circ.x = ($2->x  * 100 ) + LibEntry->BBoxMinX;
-                 New->U.Circ.y = LibEntry->BBoxMaxY - ( $2->y * 100 ) ;
-                 New->U.Circ.r = ( $3->x * 100 );
-                 New->U.Circ.width = $3->y;
-                 New->Unit = 0;
+		$$=(struct plst *)Malloc(sizeof(struct plst));
+		pl=(struct plst *)Malloc(sizeof(struct plst));
+                $$->xy=$2; $$->nxt=pl; 
+                pl->xy=$3; pl->nxt=NULL; 
 		}
        ;
 
@@ -888,12 +885,13 @@ _Dominates :
 	   |	_Dominates LogicNameRef
 	   ;
 
-Dot :		DOT _Dot PopC
-    ;
+Dot 	   :	DOT _Dot PopC
+		{$$=$2;}
+    	   ;
 
-_Dot :		PointValue
-     |		_Dot Property
-     ;
+_Dot 	   :	PointValue
+     	   |	_Dot Property
+     	   ;
 
 Duration :	DURATION ScaledInt PopC
 	 ;
@@ -1027,52 +1025,87 @@ _FigGrpRef :
 	   |	LibraryRef
 	   ;
 
-Figure :	FIGURE _Figure PopC
-       ;
+Figure     :	FIGURE _Figure PopC
+           ;
 
 _Figure :	FigGrpNameDef
-		{
-		New=(LibraryDrawEntryStruct *)Malloc(sizeof(LibraryDrawEntryStruct));
-		New->DrawType = POLYLINE_DRAW_TYPE; New->Convert =0;
-		New->U.Poly.width = 0;
-		New->nxt = LibEntry->Drawings;
-		New->Unit = 0; 
-		LibEntry->Drawings = New;
-		}
 	|	FigGrpOver
-		{
-		New=(LibraryDrawEntryStruct *)Malloc(sizeof(LibraryDrawEntryStruct));
-		New->DrawType = POLYLINE_DRAW_TYPE; New->Convert =0;
-		New->U.Poly.width = 0;
-		New->nxt = LibEntry->Drawings;
-		New->Unit = 0; 
-		LibEntry->Drawings = New;
-		}
 	|	_Figure Circle
+		{
+		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                New->nxt = LibEntry->Drawings;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+
+                New->DrawType = CIRCLE_DRAW_TYPE; 
+		New->Convert =0;
+                New->U.Circ.x =    ($2->xy->x  * 1 ) + LibEntry->BBoxMinX;
+                New->U.Circ.y =     LibEntry->BBoxMaxY - ($2->xy->y * 1 ) ;
+                New->U.Circ.r =    ($2->nxt->xy->x * 1 );
+                New->U.Circ.width = $2->nxt->xy->y;
+                New->Unit = 0;
+		}
 	|	_Figure Dot
+		{
+		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                New->nxt = LibEntry->Drawings;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+
+		// "Connection ~ %d %d\n", ox, oy); ?
+		New->DrawType = SQUARE_DRAW_TYPE; 
+                // New->nxt = LibEntry->Drawings;
+                // LibEntry->Drawings = New;
+		New->Convert =0;
+		New->U.Sqr.width = 0;
+		New->U.Sqr.x1 = (($2->x) * 1)     + LibEntry->BBoxMinX;
+		New->U.Sqr.y1 = LibEntry->BBoxMaxY  - ( $2->y * 1 );
+		New->U.Sqr.x2 = (($2->x+1) * 1)   + LibEntry->BBoxMinX;
+		New->U.Sqr.y2 = LibEntry->BBoxMaxY  - ( ($2->y+1) * 1 );
+		}
 	|	_Figure OpenShape
 	|	_Figure Path
 		{
-		New->U.Poly.n = 2;		// fixme for multi-point
-		Poly = New->U.Poly.PolyList = (int*) Malloc( 4 * sizeof(int) );
-		*Poly = (int)( $2->xy->x * 100 )      + LibEntry->BBoxMinX; 	       Poly++;
-                *Poly = LibEntry->BBoxMaxY            - (int)( $2->xy->y * 100 );      Poly++;
-                *Poly = (int)( $2->nxt->xy->x * 100 ) + LibEntry->BBoxMinX; 	       Poly++;
-                *Poly = LibEntry->BBoxMaxY            - (int)( $2->nxt->xy->y * 100 ); Poly++;
+		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                New->nxt = LibEntry->Drawings;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+		New->U.Poly.width = 0;
+
+		New->DrawType = POLYLINE_DRAW_TYPE; 
+		for( pl = $2; pl != NULL ; pl=pl->nxt )
+		    New->U.Poly.n++;
+		Poly = New->U.Poly.PolyList = (int*) Malloc( 2*New->U.Poly.n * sizeof(int) );
+		for(  ; $2 != NULL ; $2=$2->nxt ){
+		    *Poly++ = (int)( $2->xy->x * 1 )      + LibEntry->BBoxMinX;    
+                    *Poly++ = LibEntry->BBoxMaxY          - (int)( $2->xy->y * 1 ); 
+		}
 		}
 	|	_Figure Polygon
+		{
+		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                New->nxt = LibEntry->Drawings;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+		New->U.Poly.width = 0;
+
+		New->DrawType = POLYLINE_DRAW_TYPE; 
+		for( pl = $2; pl != NULL ; pl=pl->nxt )
+		    New->U.Poly.n++;
+		Poly = New->U.Poly.PolyList = (int*) Malloc( 2*New->U.Poly.n * sizeof(int) );
+		for(  ; $2 != NULL ; $2=$2->nxt ){
+		    *Poly++ = (int)( $2->xy->x * 1 )      + LibEntry->BBoxMinX;      
+                    *Poly++ = LibEntry->BBoxMaxY          - (int)( $2->xy->y * 1 );   
+		}
+		}
 	|	_Figure Rectangle
 		{
 		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
-                New->DrawType = SQUARE_DRAW_TYPE; New->Convert =0;
-                New->U.Sqr.width = 0;
                 New->nxt = LibEntry->Drawings;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+
+                New->DrawType = SQUARE_DRAW_TYPE; 
+                New->U.Sqr.width = 0;
                 New->U.Sqr.x1 = LibEntry->BBoxMinX;
                 New->U.Sqr.y1 = LibEntry->BBoxMinY;
                 New->U.Sqr.x2 = LibEntry->BBoxMaxX;
                 New->U.Sqr.y2 = LibEntry->BBoxMaxY;
-                New->Unit = 0; 
-		LibEntry->Drawings = New;
 		}
 	|	_Figure Shape
 	|	_Figure Comment
@@ -1170,7 +1203,7 @@ Initial :	INITIAL PopC
 
 Instance :	INSTANCE InstNameDef _Instance PopC
 		{
-		$$=$2; if(bug>2)fprintf(Error,"\nInstNameDef: %s\n", $2);
+		$$=$2; if(bug>2)fprintf(Error,"\nINSTANCE: %s\n", $2);
 
 		strcpy(LibEntry->Name, $2);
                 LibEntry->DrawName = 1;
@@ -1233,6 +1266,7 @@ _InstMap :
 	 ;
 
 InstNameDef :	NameDef
+		{if(bug>2)fprintf(Error,"InstNameDef:%d '%s'\n",LineNumber, $1); }
 	    |	Array
 	    ;
 
@@ -1833,8 +1867,8 @@ Origin       :	ORIGIN PointValue PopC
                 New->nxt = LibEntry->Drawings;
                 LibEntry->Drawings = New;
 		New->U.Text.Horiz =1; 
-                New->U.Text.x = (int)( $2->x * 100 ) + LibEntry->BBoxMinX;
-                New->U.Text.y = LibEntry->BBoxMaxY - (int)( $2->y * 100 );
+                New->U.Text.x = (int)( $2->x * 1 ) + LibEntry->BBoxMinX;
+                New->U.Text.y = LibEntry->BBoxMaxY - (int)( $2->y * 1 );
                 New->U.Text.size = DEFAULT_SIZE_TEXT;
                 New->U.Text.type = 0;
 		New->U.Text.Text = bad;		// fixme
@@ -1965,9 +1999,10 @@ _PointList :
 		{$$=NULL;}
 	   |	_PointList PointValue
 		{ 	
-		$$=(struct plst *)Malloc(sizeof(struct plst)); 
-		$$->xy=$2; $$->nxt=$1;
-		$1 = $$;
+		pl=(struct plst *)Malloc(sizeof(struct plst)); 
+		pl->xy=$2; 
+		pl->nxt=$$;
+		$$ = pl;
 		}
 	   ;
 
@@ -1978,12 +2013,13 @@ PointValue : 	PT Int Int PopC
 		}
 	   ;
 
-Polygon :	POLYGON _Polygon PopC
-	;
+Polygon    :	POLYGON _Polygon PopC
+		{$$=$2;}
+	   ;
 
-_Polygon :	PointList
-	 |	_Polygon Property
-	 ;
+_Polygon   :	PointList
+	   |	_Polygon Property
+	   ;
 
 Port :		PORT _Port PopC
      ;
@@ -2072,15 +2108,15 @@ PortImpl :	PORTIMPLEMENTATION _PortImpl PopC
 	 ;
 
 _PortImpl :	Name
-		{if(bug>4)fprintf(Error," _PortImpl Name %s\n", $1);}
+		{if(bug>2)fprintf(Error," _PortImpl Name %s\n", $1);}
 	  |	Ident
-		{if(bug>4)fprintf(Error," _PortImpl Ident %s\n", $1);}
+		{if(bug>2)fprintf(Error," _PortImpl Ident %s\n", $1);}
 	  |	_PortImpl ConnectLoc
-		{if(bug>4)fprintf(Error," _PortImpl ConnLoc \n");}
+		{if(bug>2)fprintf(Error," _PortImpl ConnLoc \n");}
 	  |	_PortImpl Figure
-		{if(bug>4)fprintf(Error," _PortImpl Figure \n");}
+		{if(bug>2)fprintf(Error," _PortImpl Figure \n");}
 	  |	_PortImpl Instance
-		{if(bug>4)fprintf(Error," _PortImpl Instance \n");}
+		{if(bug>2)fprintf(Error," _PortImpl Instance \n");}
 	  |	_PortImpl CommGraph
 		{if(bug>2)fprintf(Error," _PortImpl CommGraph \n");}
 	  |	_PortImpl PropDisp
@@ -2100,7 +2136,7 @@ _PortImpl :	Name
 		}
 		}
 	  |	_PortImpl Property
-		{if(bug>4)fprintf(Error," _PortImpl Property \n");}
+		{if(bug>2)fprintf(Error," _PortImpl Property \n");}
 	  |	_PortImpl UserData
 	  |	_PortImpl Comment
 	  ;
@@ -2245,10 +2281,10 @@ _RangeVector :
 Rectangle :	RECTANGLE PointValue _Rectangle PopC
 		{
 		// for e2lib
-                LibEntry->BBoxMinX = $2->x;
-                LibEntry->BBoxMaxX = $3->x;
-                LibEntry->BBoxMinY = $2->y;
-                LibEntry->BBoxMaxY = $3->y;
+                LibEntry->BBoxMinX = $2->x *1;
+                LibEntry->BBoxMaxX = $3->x *1;
+                LibEntry->BBoxMinY = $2->y *1;
+                LibEntry->BBoxMaxY = $3->y *1;
 		}
 	  ;
 

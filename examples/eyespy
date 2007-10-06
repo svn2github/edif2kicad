@@ -2555,9 +2555,10 @@
           (property(rename FONT "font")
            (string "Arial")))
          (justify UPPERLEFT) (origin(pt 2800 -800))))))
-     (figure BODY(rectangle(pt 0 0)
+     (figure BODY
+      (rectangle(pt 0 0)
        (pt 3600 -200))
-      ( rectangle(pt 0 -200)
+      (rectangle(pt 0 -200)
        (pt 3600 -500))
       (rectangle(pt 0 -500)
        (pt 300 -800))
@@ -2582,7 +2583,8 @@
    (view(rename XTIE0A2Y2 "XTIE0A2Y2")
     (viewType SCHEMATIC)
     (interface(port(rename &1 "1"))
-     (symbol(portImplementation &1( connectLocation(figure PORT(dot(pt 0 0)))))
+     (symbol(portImplementation &1(connectLocation
+      (figure PORT(dot(pt 0 0)))))
       (figure WIRE(circle(pt -20 0)
         (pt 20 0 ))))))))
  (library(rename EYESPY "EYESPY")
