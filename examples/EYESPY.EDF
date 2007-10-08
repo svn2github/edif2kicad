@@ -1119,9 +1119,9 @@ ge Modify Time")(string "18:08:19"))(property(rename SOURCE_32_LIBRARY "Source L
 ibrary")(string "C:\PROGRAM FILES\ORCAD\CAPTURE\LIBRARY\CAPSYM.OLB"))(property(
 rename SOURCE_32_SYMBOL "Source Symbol")(string "TitleBlock0"))(property(rename
 ORGADDR4 "OrgAddr4")(string ""))(property(rename ORGADDR3 "OrgAddr3")(string "")
-)(property(rename ORGADDR2 "OrgAddr2")(string "Fort Collins, CO 80524"))(
-property(rename ORGADDR1 "OrgAddr1")(string "107 N.College Ave., Ste. B100"))(
-property(rename ORGNAME "OrgName")(string "Test Systems Engineering"))(property(
+)(property(rename ORGADDR2 "OrgAddr2")(string "Fort Collins, CO 80526"))(
+property(rename ORGADDR1 "OrgAddr1")(string "mathegraphics.com"))(
+property(rename ORGNAME "OrgName")(string "Mathegraphics, LLC."))(property(
 rename TITLE "Title")(string(stringDisplay "ATX Power Supply"(display(
 figureGroupOverride TITLEBLOCK(textHeight 250))(justify UPPERLEFT)(origin(pt
 11800 -8840))))))(property(rename CAGE_32_CODE "Cage Code")(string ""))(property

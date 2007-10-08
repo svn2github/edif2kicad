@@ -21,7 +21,7 @@
 #include "ed.h"
 #include "eelibsl.h"
 
-#define DEBUG
+// #define DEBUG
 #define SIZE_PIN_TEXT 60
 
 static FILE *Input = NULL;              /* input stream */
@@ -35,8 +35,9 @@ global struct con  *cons,  *cptr;
 int  			num, *Poly;
 LibraryDrawEntryStruct   *New=NULL, *INew, *Drawing;
 LibraryFieldEntry        *InsEntry;
-char *bad="Z";
+char *bad="ZZZZ";
 struct plst *pl;
+int convert=0;	  // normal
 
 %}
 
@@ -65,7 +66,7 @@ struct plst *pl;
 %type   <s>	NetNameDef Array
 %type   <s>	CellNameDef CellNameRef CellRef Cell
 %type   <s>	Rename _Rename __Rename
-%type   <s> 	_Orientation _Figure 
+%type   <s> 	Orientation _Orientation _Figure 
 %type   <s>	FigGrp _FigGrp
 %type   <s>	FigGrpNameDef FigGrpOver _FigGrpOver FigGrpNameRef 
 %type   <s>	ViewRef _ViewRef ViewNameRef ViewList _ViewList
@@ -76,6 +77,7 @@ struct plst *pl;
 %type   <s>	_PortImpl _Symbol	
 %type	<s>	PortNameRef PortRef _PortRef Member 
 %type	<s>	Design DesignNameDef
+%type	<s>	_DisplayOrien
 
 %token	<s>	IDENT
 %token	<s>	INT
@@ -423,10 +425,10 @@ _Annotate :	Str
 	  |	StrDisplay
 		{
                 New->U.Text.Text = $1;
-		if( $1 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $1 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
                 }
 	  ;
 
@@ -441,6 +443,19 @@ _Apply :	Cycle
        ;
 
 Arc :		ARC PointValue PointValue PointValue PopC
+		{
+		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                New->nxt = LibEntry->Drawings;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert = convert;
+
+                New->DrawType = ARC_DRAW_TYPE; 
+                New->U.Arc.x  = $2->x; 
+                New->U.Arc.y  = $2->y;
+                New->U.Arc.r  = $3->x;
+                New->U.Arc.t1 = $3->y;
+                New->U.Arc.t2 = $4->x;
+                New->U.Arc.width = 0;
+		}
     ;
 
 Array :		ARRAY NameDef Int _Array PopC
@@ -811,10 +826,10 @@ _Designator :	Str
 	    |	StrDisplay
                 {
                 New->U.Text.Text = $1;
-		if( $1 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $1 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
                 }
 
 	    ;
@@ -871,6 +886,7 @@ _DisplayJust :
 	     ;
 
 _DisplayOrien :
+		{$$=NULL;}
 	      |	Orientation
 	      ;
 
@@ -1031,30 +1047,15 @@ Figure     :	FIGURE _Figure PopC
 _Figure :	FigGrpNameDef
 	|	FigGrpOver
 	|	_Figure Circle
-		{
-		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
-                New->nxt = LibEntry->Drawings;
-		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
-
-                New->DrawType = CIRCLE_DRAW_TYPE; 
-		New->Convert =0;
-                New->U.Circ.x =    ($2->xy->x  * 1 ) + LibEntry->BBoxMinX;
-                New->U.Circ.y =     LibEntry->BBoxMaxY - ($2->xy->y * 1 ) ;
-                New->U.Circ.r =    ($2->nxt->xy->x * 1 );
-                New->U.Circ.width = $2->nxt->xy->y;
-                New->Unit = 0;
-		}
 	|	_Figure Dot
 		{
 		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
                 New->nxt = LibEntry->Drawings;
-		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert = convert;
 
-		// "Connection ~ %d %d\n", ox, oy); ?
 		New->DrawType = SQUARE_DRAW_TYPE; 
                 // New->nxt = LibEntry->Drawings;
                 // LibEntry->Drawings = New;
-		New->Convert =0;
 		New->U.Sqr.width = 0;
 		New->U.Sqr.x1 = (($2->x) * 1)     + LibEntry->BBoxMinX;
 		New->U.Sqr.y1 = LibEntry->BBoxMaxY  - ( $2->y * 1 );
@@ -1066,7 +1067,7 @@ _Figure :	FigGrpNameDef
 		{
 		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
                 New->nxt = LibEntry->Drawings;
-		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert = convert;
 		New->U.Poly.width = 0;
 
 		New->DrawType = POLYLINE_DRAW_TYPE; 
@@ -1082,7 +1083,7 @@ _Figure :	FigGrpNameDef
 		{
 		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
                 New->nxt = LibEntry->Drawings;
-		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert = convert;
 		New->U.Poly.width = 0;
 
 		New->DrawType = POLYLINE_DRAW_TYPE; 
@@ -1098,7 +1099,7 @@ _Figure :	FigGrpNameDef
 		{
 		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
                 New->nxt = LibEntry->Drawings;
-		LibEntry->Drawings = New; New->Unit = 0; New->Convert =0;
+		LibEntry->Drawings = New; New->Unit = 0; New->Convert = convert;
 
                 New->DrawType = SQUARE_DRAW_TYPE; 
                 New->U.Sqr.width = 0;
@@ -1210,10 +1211,10 @@ Instance :	INSTANCE InstNameDef _Instance PopC
                 CurrentLib->NumOfParts++;
 
 		INew->U.Text.Text = $2;
-		if( $2 != NULL ){
-                    INew->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    INew->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $2 == NULL )
+		    INew->U.Text.Text = strdup("XXXX");
+                INew->U.Text.x += (INew->U.Text.size * strlen(INew->U.Text.Text))/2;
+                INew->U.Text.y +=  INew->U.Text.size / 2;
 		}
 	 ;
 
@@ -1838,21 +1839,21 @@ _OpenShape :	Curve
 	   ;
 
 Orientation :	ORIENTATION _Orientation PopC
-		{if(bug>5)fprintf(Error," Orient %s ",$2);}
+		{$$=$2; if(bug>2)fprintf(Error," Orient %s ",$2);}
 	    ;
 
 _Orientation :	R0
-		{$$="  R0";}
+		{$$="R0";}
 	     |	R90
-		{$$=" R90";}
+		{$$="R90"; }
 	     |	R180
 		{$$="R180";}
 	     |	R270
-		{$$="R270";}
+		{$$="R270"; }
 	     |	MX
-		{$$="  MX";}
+		{$$="MX";}
 	     |	MY
-		{$$="  MY";}
+		{$$="MY";}
 	     |	MYR90
 		{$$="MYR90";}
 	     |	MXR90
@@ -1863,7 +1864,7 @@ Origin       :	ORIGIN PointValue PopC
 		{
 		if(bug>2)fprintf(Error,"\nOrg: %d %d\n", $2->x, $2->y);
                 New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
-                New->DrawType = TEXT_DRAW_TYPE; New->Convert =0;
+                New->DrawType = TEXT_DRAW_TYPE; New->Convert = convert;
                 New->nxt = LibEntry->Drawings;
                 LibEntry->Drawings = New;
 		New->U.Text.Horiz =1; 
@@ -2027,17 +2028,16 @@ Port :		PORT _Port PopC
 _Port :		PortNameDef
 		{
 		New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
-                New->DrawType = PIN_DRAW_TYPE; New->Convert =0;
+                New->DrawType = PIN_DRAW_TYPE; New->Convert = convert;
                 New->nxt = LibEntry->Drawings;
                 LibEntry->Drawings = New;
+                New->Unit = 1; 			// PartPerPack-ii;     
+                New->U.Pin.Len = 300;
+                New->U.Pin.Orient = PIN_LEFT;
+                New->U.Pin.PinShape = NONE;	// DOT, CLOCK, SHORT
+                New->U.Pin.Flags = 0;           /* Pin visible */
                 New->U.Pin.SizeNum  = SIZE_PIN_TEXT;
                 New->U.Pin.SizeName = SIZE_PIN_TEXT;
-                New->Unit = 1; 			// PartPerPack-ii;     
-                New->Convert = 0; 		// CurrentConvert;
-                New->U.Pin.PinShape = NONE;	// DOT, CLOCK, SHORT
-                New->U.Pin.Len = 300;
-                New->U.Pin.Orient = PIN_RIGHT;
-                New->U.Pin.Flags = 0;           /* Pin visible */
 		New->U.Pin.Name = $1;
 		}
       |		_Port Direction
@@ -2057,7 +2057,7 @@ _Port :		PortNameDef
       |		_Port AcLoad
       |		_Port Property
                 {
-		New->U.Pin.PinShape = DOT;	// DOT, CLOCK, SHORT
+		New->U.Pin.PinShape = INVERT;	// NONE, INVERT, CLOCK, LOWLEVEL
 		}
       |		_Port Comment
       |		_Port UserData
@@ -2122,18 +2122,18 @@ _PortImpl :	Name
 	  |	_PortImpl PropDisp
 		{if(bug>2)fprintf(Error," _PortImpl PropDisp %s\n", $1); 
 		New->U.Text.Text = $1;
-		if( $1 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $1 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
 		}
 	  |	_PortImpl KeywordDisp
 		{if(bug>2)fprintf(Error," _PortImpl KeywDisp %s\n", $1); 
 		New->U.Text.Text = $1;
-		if( $1 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $1 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
 		}
 	  |	_PortImpl Property
 		{if(bug>2)fprintf(Error," _PortImpl Property \n");}
@@ -2201,6 +2201,14 @@ _PortRef :
 		{$$=NULL;}
 	 |	PortRef
 	 |	InstanceRef
+                {
+                if(bug>4)fprintf(Error,"InstRef: %8s ", $1);
+                cptr = (struct con *) malloc (sizeof (struct con));
+                cptr->ref = $1;
+                cptr->nnam = cur_nnam;
+                cptr->nxt = cons;
+                cons = cptr;
+                }
 	 |	ViewRef
 	 ;
 
@@ -2220,10 +2228,10 @@ _PropDisp    :	PropNameRef
 	     |	_PropDisp Display
 		{$$=$1;
                 New->U.Text.Text = $1;
-                if( $1 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+                if( $1 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
 		}
 	     ;
 
@@ -2314,10 +2322,10 @@ _Rename   :	Str
 	  |	StrDisplay
                 {
                 New->U.Text.Text = $1;
-		if( $1 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $1 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
                 }
 	  ;
 
@@ -2454,10 +2462,10 @@ _String :
 	|	_String StrDisplay
 		{$$=$2;
                 New->U.Text.Text = $2;
-		if( $2 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $2 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
                 }
 	|	_String String
 		{$$=$2;}
@@ -2486,19 +2494,19 @@ _Symbol :
 		{
 		if(bug>2)fprintf(Error," _Sym PropD '%s'\n", $1); 
 		New->U.Text.Text = $1;
-		if( $1 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $1 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
 		}
 	|	_Symbol KeywordDisp
 		{
 		if(bug>2)fprintf(Error," _Sym KeywD '%s'\n", $1); 
 		New->U.Text.Text = $1;
-		if( $1 != NULL ){
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		if( $1 == NULL )
+		    New->U.Text.Text = strdup("XXXX");
+                New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
+                New->U.Text.y += New->U.Text.size / 2;
 		}
 	|	_Symbol ParamDisp
 		{if(bug>2)fprintf(Error," _Sym ParamDisp \n");}
@@ -2683,7 +2691,11 @@ _UserData :	Ident
 	  ;
 
 ValueNameDef :	NameDef
-		{if(bug>5)fprintf(Error," ValueNameDef: %s\n", $1);}
+		{
+		if(bug>2)fprintf(Error," ValueNameDef: %s\n", $1);
+		convert = strcmp( $1, "CONVERT")
+			| strcmp( $1, "Convert");
+		}
 	     |	Array
 	     ;
 

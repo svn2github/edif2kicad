@@ -9,7 +9,7 @@
 
 char *InFile = "-";
 
-extern int yydebug;
+int yydebug=0;
 int bug;  		// debug level: >2 netlist, >5 schematic, >8 all
 
 char FileNameEdf[64], FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
@@ -56,6 +56,27 @@ main(int argc, char *argv[])
           return(-1);
      }
   }
+
+  LibEntry = (LibraryEntryStruct *) Malloc(sizeof(LibraryEntryStruct));
+  LibEntry->Type = ROOT;
+  LibEntry->PrefixSize =  DEFAULT_SIZE_TEXT;
+  LibEntry->PrefixPosY = PIN_WIDTH;
+  LibEntry->NamePosY = - PIN_WIDTH;
+  LibEntry->NameSize =  DEFAULT_SIZE_TEXT;
+  LibEntry->Prefix[0] = 'U';
+  LibEntry->Prefix[1] = 0; LibEntry->DrawPrefix = 1;
+  LibEntry->TextInside = 30;
+  LibEntry->DrawPinNum = 1;
+  LibEntry->DrawPinName = 1;
+  LibEntry->NumOfUnits = 1;
+  LibEntry->Fields = NULL;
+  LibEntry->Drawings = NULL;
+  LibEntry->nxt = NULL;
+
+  CurrentLib = (LibraryStruct *) Malloc(sizeof(LibraryStruct));
+  strncpy(CurrentLib->Name, "Dummy",40);
+  CurrentLib->NumOfParts=0; CurrentLib->Entries = LibEntry;
+  CurrentLib->nxt=NULL;
 
   ParseEDIF(FileEdf, stderr);
 

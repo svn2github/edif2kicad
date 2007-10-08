@@ -10,7 +10,7 @@
 char *InFile = "-";
 
 int yydebug=0;
-int bug=3;  		// debug level: 0 off, >2 netlist, >5 schematic, >8 all
+int bug=0;  		// debug level: 0 off, >5 netlist, >2 schematic, >8 all
 
 char FileNameEdf[64], FileNameNet[64], FileNameLib[64], FileNameEESchema[64];
 FILE * FileEdf, * FileNet, * FileEESchema, * FileLib=NULL;

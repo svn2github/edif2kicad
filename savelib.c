@@ -147,6 +147,8 @@ char FlagXpin = 0;
 				case TEXT_DRAW_TYPE:
 					#undef DRAWSTRUCT
 					#define DRAWSTRUCT (&(DrawEntry->U.Text))
+					if( DRAWSTRUCT->Text != NULL &
+					    strcmp(DRAWSTRUCT->Text, " ") )
 					fprintf(ExportFile,"T %d %d %d %d %d %d %d %s\n",
 						DRAWSTRUCT->Horiz,DRAWSTRUCT->x, DRAWSTRUCT->y,
 						DRAWSTRUCT->size, DRAWSTRUCT->type,
