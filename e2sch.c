@@ -7,12 +7,12 @@
 #include "ed.h"
 #include "eelibsl.h"
 
+int yydebug=0;
+int bug=0;  		// debug level: >2 netlist, >5 schematic, >8 all
+
 char *InFile = "-";
 
-extern int yydebug;
-int bug;  		// debug level: >2 netlist, >5 schematic, >8 all
-
-char FileNameEdf[64], FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
+char  FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
 FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib=NULL;
 
 global char                      *cur_nnam=NULL;
@@ -34,22 +34,22 @@ main(int argc, char *argv[])
   else
     progname = argv[0];
 
-  printf("*** %s Version %s ***\n", progname, version);
+  fprintf(stderr,"*** %s Version %s ***\n", progname, version);
 
   if( argc != 2 ) {
-     printf( " usage: %s EDIDsrc \n") ; return(1);
+     fprintf(stderr, " usage: %s EDIDsrc \n") ; return(1);
   }
 
-  sprintf(FileNameEdf,"%s",argv[1]);
+  InFile= argv[1];
   sprintf(FileNameEESchema,"%s.sch",argv[1]);
   sprintf(FileNameSdtLib,"%s.src",argv[1]);
-  if( (FileEdf = fopen( FileNameEdf, "rt" )) == NULL ) {
-       printf( " %s non trouve\n", FileNameEdf);
+  if( (FileEdf = fopen( InFile, "rt" )) == NULL ) {
+       fprintf(stderr, " %s non trouve\n", InFile);
        return(-1);
   }
 
   if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
-       printf( " %s impossible a creer\n", FileNameEESchema);
+       fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
        return(-1);
   }
 
@@ -57,6 +57,8 @@ main(int argc, char *argv[])
   fprintf(FileEESchema,"LIBS:none\n");
   fprintf(FileEESchema,"EELAYER 0 0\nEELAYER END\n");
 
+  Libs=NULL;
+  fprintf(stderr, "Parsing %s\n", InFile);
   ParseEDIF(FileEdf, stderr);
 
 #ifdef NOT
@@ -80,5 +82,4 @@ main(int argc, char *argv[])
   fclose(FileEESchema);
   if( FileSdtLib ) fclose(FileSdtLib);
   return(0);
-
 }

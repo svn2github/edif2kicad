@@ -5,8 +5,7 @@
   (Written
    (Timestamp 1987 11 11 11 23 07)
    (Author "Hewlett-Packard, Logic Design Operation")
-  )
- )
+  ))
  (Library (Rename remote_45_control "remote-control")
   (EdifLevel 0)
   (Technology
@@ -25,56 +24,38 @@
     Electronic Capture System Graphics Package")
    )
   )
-  (Cell sw
-   (CellType Generic)
+  (Cell sw (CellType Generic)
    (View Graphic_Schematic (ViewType SCHEMATIC)
     (Interface
      (Port n 
-      (Designator "1")
-     )
+      (Designator "1"))
      (Port m 
-      (Designator "2")
-     )
+      (Designator "2"))
      (Symbol
-      (Property original_Symbol_Origin (POINT (Pt 6250 43750))
-       (Owner "SCHEMATIC")
-      )
       (PortImplementation 
-       (Name n
-        (Display          
+       (Name n(Display          
          (FigureGroupOverride hp74200_Default
-          (TextHeight 13880)
-         )
+          (TextHeight 13880))
          (Justify CENTERLEFT)
          (Orientation R0)
-         (Origin (Pt 25500 36750))
-        )
-       )
+         (Origin (Pt 25500 36750))))
        (KeywordDisplay Designator
         (Display hp74200_Default
          (Justify LOWERCENTER)
          (Orientation R0)
-         (Origin (Pt 21250 51250))
-        )
-       )
+         (Origin (Pt 21250 51250))))
        (ConnectLocation 
         (Figure hp74200_Default
-         (Dot (Pt 6250 43750))
-        )
-       )
+         (Dot (Pt 6250 43750))))
        (Figure hp74200_Default
         (Comment "Short Pin")
         (Path
          (PointList
           (Pt 6250 43750)
-          (Pt 31250 43750)
-         )
-        )
-       )
-      )
+          (Pt 31250 43750)))
+       ))
       (PortImplementation 
-       (Name m
-        (Display          
+       (Name m(Display          
          (FigureGroupOverride hp74200_Default
           (TextHeight 13880)
          )
@@ -92,51 +73,37 @@
        )
        (ConnectLocation 
         (Figure hp74200_Default
-         (Dot (Pt 93750 43750))
-        )
-       )
+         (Dot (Pt 93750 43750))))
        (Figure hp74200_Default
         (Comment "Short Pin")
         (Path
          (PointList
           (Pt 93750 43750)
-          (Pt 68750 43750)
-         )
-        )
-       )
-      )
+          (Pt 68750 43750)))
+       ))
       (Figure hp74200_Default
        (Comment "Line")
        (Path
         (PointList
          (Pt 34375 43750)
-         (Pt 65625 53125)
-        )
-       )
+         (Pt 65625 53125)))
       )
       (Figure hp74200_Default
        (Circle
         (Pt 65625 43750)
-        (Pt 71875 43750)
-       )
-      )
+        (Pt 71875 43750)))
       (Figure hp74200_Default
        (Circle
         (Pt 28125 43750)
-        (Pt 34375 43750)
-       )
-      )
+        (Pt 34375 43750)))
       (Figure
        (FigureGroupOverride hp74200_Default
         (FillPattern 1 1 (Boolean (True) (True)))
        )
-       (Shape
-        (Curve
+       (Shape (Curve
          (Pt 65625 53125)
          (Pt 56250 53125)
-         (Pt 59375 46875)
-        )
-       )
+         (Pt 59375 46875)))
       )
      )
     )
@@ -207,9 +174,6 @@
       (Designator "15")
      )
      (Symbol
-      (Property original_Symbol_Origin (POINT (Pt 0 0))
-       (Owner "SCHEMATIC")
-      )
       (PortImplementation 
        (Name A0
         (Display          
@@ -764,9 +728,6 @@
       (Designator "4")
      )
      (Symbol
-      (Property original_Symbol_Origin (POINT (Pt 0 0))
-       (Owner "SCHEMATIC")
-      )
       (PortImplementation 
        (Name x
         (Display          
@@ -937,9 +898,6 @@
       (Designator "3")
      )
      (Symbol
-      (Property original_Symbol_Origin (POINT (Pt 0 0))
-       (Owner "SCHEMATIC")
-      )
       (PortImplementation 
        (Name x1
         (Display          
@@ -1064,9 +1022,6 @@
       (Designator "2")
      )
      (Symbol
-      (Property original_Symbol_Origin (POINT (Pt 0 0))
-       (Owner "SCHEMATIC")
-      )
       (PortImplementation 
        (Name i
         (Display          
@@ -1178,9 +1133,6 @@
       (Designator "2")
      )
      (Symbol
-      (Property original_Symbol_Origin (POINT (Pt 0 0))
-       (Owner "SCHEMATIC")
-      )
       (PortImplementation 
        (Name q
         (Display          
@@ -1277,9 +1229,6 @@
       (Designator "2")
      )
      (Symbol
-      (Property original_Symbol_Origin (POINT (Pt 0 0))
-       (Owner "SCHEMATIC")
-      )
       (PortImplementation 
        (Name o
         (Display          
@@ -2296,11 +2245,7 @@
        )
       )
       (Net        
-       (Rename
-        (Name &_37_NET00046
-        )
-        "%37%NET00046"
-       )
+       (Rename (Name &_37_NET00046) "%37%NET00046")
        (Joined 
         (PortRef STATUS (InstanceRef CMP24))
         (PortRef o (InstanceRef CMP26))
@@ -2315,11 +2260,7 @@
        )
       )
       (Net        
-       (Rename
-        (Name &_37_NET00055
-        )
-        "%37%NET00055"
-       )
+       (Rename (Name &_37_NET00055) "%37%NET00055")
        (Joined 
         (PortRef ENC_32_OUT (InstanceRef CMP24))
         (PortRef ENC_32_OUT (InstanceRef CMP4))
@@ -2329,35 +2270,23 @@
         (Path 
          (PointList
           (Pt 212500 487500)
-          (Pt 212500 131250)
-         )
-        )
+          (Pt 212500 131250)))
         (Path 
          (PointList
           (Pt 212500 487500)
-          (Pt 175000 487500)
-         )
-        )
+          (Pt 175000 487500)))
         (Path 
          (PointList
           (Pt 212500 487500)
-          (Pt 375000 487500)
-         )
-        )
+          (Pt 375000 487500)))
         (Path 
          (PointList
           (Pt 212500 131250)
-          (Pt 375000 131250)
-         )
-        )
+          (Pt 375000 131250)))
        )
       )
       (Net        
-       (Rename
-        (Name &_37_NET00059
-        )
-        "%37%NET00059"
-       )
+       (Rename (Name &_37_NET00059) "%37%NET00059")
        (Joined 
         (PortRef i (InstanceRef CMP30))
         (PortRef DEC_32_IN (InstanceRef CMP4))
@@ -2570,29 +2499,20 @@
         (Path
          (PointList
           (Pt 618750 -300000)
-          (Pt 618750 -325000)
-         )
-        )
+          (Pt 618750 -325000)))
         (Path
          (PointList
           (Pt 600000 -325000)
-          (Pt 637500 -325000)
-         )
-        )
+          (Pt 637500 -325000)))
         (Path
          (PointList
           (Pt 606250 -334380)
-          (Pt 631250 -334380)
-         )
-        )
+          (Pt 631250 -334380)))
         (Path
          (PointList
           (Pt 612500 -343750)
-          (Pt 625000 -343750)
-         )
-        )
-       )
-      )
+          (Pt 625000 -343750)))
+       ))
       (PortImplementation 
        (Name acknowledge
         (Display          
@@ -2606,24 +2526,18 @@
        )
        (ConnectLocation 
         (Figure hp74200_Default 
-         (Dot (Pt -618750 -25000))
-        )
-       )
+         (Dot (Pt -618750 -25000))))
        (Figure hp74200_Default
         (Comment "Connector-Out Connector")
         (Path
          (PointList
           (Pt -618750 -25000)
-          (Pt -643750 -25000)
-         )
-        )
+          (Pt -643750 -25000)))
         (Path
          (PointList
           (Pt -631250 -29680)
           (Pt -643750 -25000)
-          (Pt -631250 -20320)
-         )
-        )
+          (Pt -631250 -20320)))
        )
       )
       (PortImplementation 
@@ -2639,24 +2553,18 @@
        )
        (ConnectLocation 
         (Figure hp74200_Default 
-         (Dot (Pt -618750 37500))
-        )
-       )
+         (Dot (Pt -618750 37500))))
        (Figure hp74200_Default
         (Comment "Connector-Out Connector")
         (Path
          (PointList
           (Pt -618750 37500)
-          (Pt -643750 37500)
-         )
-        )
+          (Pt -643750 37500)))
         (Path
          (PointList
           (Pt -631250 32820)
           (Pt -643750 37500)
-          (Pt -631250 42180)
-         )
-        )
+          (Pt -631250 42180)))
        )
       )
      )
@@ -2665,4 +2573,3 @@
   )
  )
 )
-

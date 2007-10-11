@@ -195,9 +195,9 @@ typedef struct LibraryStruct {
 
 #endif // EELIBSL_H
 
-global LibraryStruct          	*Libs, *Lptr, *CurrentLib;
-global LibraryEntryStruct 	*LibEntry;
-global LibraryDrawEntryStruct 	*Drawing;
+global LibraryStruct          	*Libs,  *CurrentLib;
+global LibraryEntryStruct 	*LibEntry, *LEptr;
+global LibraryDrawEntryStruct 	*Drawing, *LDptr;
 global LibraryFieldEntry	*InsEntry;
 
 /*

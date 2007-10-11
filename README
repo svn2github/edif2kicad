@@ -1,6 +1,13 @@
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	edif.y, e2net, e2sch - Frank Bennett 
 
+	20071010 fwb - major rewrite, cleanup
+		       produces separate libs, KiCad style
+		       symbol pins are close
+		       but not quite ready for primetime
+		       ARC needs some work
+		       Note:OrCad puts out multiple Instance designators
+			    Program warnings only
 	20071006 fwb - fewer errors on lib browse
 		  	symbls are recognizable
 			need to work on text orientation	

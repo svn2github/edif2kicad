@@ -7,12 +7,12 @@
 #include "ed.h"
 #include "eelibsl.h"
 
+int yydebug=0;
+int bug=0;  		// debug level: >2 netlist, >5 schematic, >8 all
+
 char *InFile = "-";
 
-int yydebug=0;
-int bug;  		// debug level: >2 netlist, >5 schematic, >8 all
-
-char FileNameEdf[64], FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
+char FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
 FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib=NULL;
 
 global char                      *cur_nnam=NULL;
@@ -24,60 +24,37 @@ main(int argc, char *argv[])
   char * version      = "0.9";
   char * progname;
 
-  yydebug=0; bug=0;
-//  yydebug=0; bug=3;  
-//  yydebug=1; bug=9;
-
   progname = strrchr(argv[0],'/');
   if (progname)
     progname++;
   else
     progname = argv[0];
 
-  printf("*** %s Version %s ***\n", progname, version);
+  fprintf(stderr, "*** %s Version %s ***\n", progname, version);
 
   // if( argc != 2 ) {
-  //    printf( " usage: %s EDIDsrc \n") ; return(1);
+  //    fprintf(stderr,  " usage: %s EDIDsrc \n") ; return(1);
   // }
 
   if( argc != 2 ){
      FileEdf = stdin;
      FileNet = stdout;
   }else{
-     sprintf(FileNameEdf,"%s",argv[1]);
+     InFile= argv[1];
      sprintf(FileNameNet,"%s.net",argv[1]);
-     if( (FileEdf = fopen( FileNameEdf, "rt" )) == NULL ) {
-          printf( " %s non trouve\n", FileNameEdf);
+     fprintf(stderr, "%s\n", InFile);
+     if( (FileEdf = fopen( InFile, "rt" )) == NULL ) {
+          fprintf(stderr, " %s non trouve\n", InFile);
           return(-1);
      }
 
      if( (FileNet = fopen( FileNameNet, "wt" )) == NULL ) {
-          printf( " %s impossible a creer\n", FileNameNet);
+          fprintf(stderr, " %s impossible a creer\n", FileNameNet);
           return(-1);
      }
   }
 
-  LibEntry = (LibraryEntryStruct *) Malloc(sizeof(LibraryEntryStruct));
-  LibEntry->Type = ROOT;
-  LibEntry->PrefixSize =  DEFAULT_SIZE_TEXT;
-  LibEntry->PrefixPosY = PIN_WIDTH;
-  LibEntry->NamePosY = - PIN_WIDTH;
-  LibEntry->NameSize =  DEFAULT_SIZE_TEXT;
-  LibEntry->Prefix[0] = 'U';
-  LibEntry->Prefix[1] = 0; LibEntry->DrawPrefix = 1;
-  LibEntry->TextInside = 30;
-  LibEntry->DrawPinNum = 1;
-  LibEntry->DrawPinName = 1;
-  LibEntry->NumOfUnits = 1;
-  LibEntry->Fields = NULL;
-  LibEntry->Drawings = NULL;
-  LibEntry->nxt = NULL;
-
-  CurrentLib = (LibraryStruct *) Malloc(sizeof(LibraryStruct));
-  strncpy(CurrentLib->Name, "Dummy",40);
-  CurrentLib->NumOfParts=0; CurrentLib->Entries = LibEntry;
-  CurrentLib->nxt=NULL;
-
+  Libs=NULL;
   ParseEDIF(FileEdf, stderr);
 
   // bubble sort cons by ref
@@ -85,9 +62,10 @@ main(int argc, char *argv[])
   char line[80], s1[40], s2[40], *s;
 
 //  for (start=cons ; start != NULL ; start = start->nxt ){
-//      printf("%s %25s %s\n", start->ref, start->pin, start->nnam);
+//      fprintf(stderr,"%s %25s %s\n", start->ref, start->pin, start->nnam);
 //  }
 
+  if(cons != NULL)
   while (e != cons->nxt ) {
     c = a = cons; b = a->nxt;
     while(a != e) {
@@ -154,6 +132,6 @@ main(int argc, char *argv[])
   fclose(FileNet);
   
   if( FileNet != stdout )
-    printf("  output is %s \n", FileNameNet);
+    fprintf(stderr,"  output is %s \n", FileNameNet);
   return(0);
 }

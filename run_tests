@@ -1,0 +1,9 @@
+make
+e2lib examples/BCD
+e2lib examples/hptest
+e2lib examples/eyespy
+e2lib examples/PS10
+e2net examples/BCD
+e2net examples/eyespy
+e2net examples/hptest
+e2net examples/PS10

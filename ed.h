@@ -34,8 +34,8 @@ struct con  {
   struct con    *nxt;
 };
 
-struct pt { int x,y;};
-
+struct pt   { int x,y;};
+struct st   { char *s; struct pt *p; int n; struct st *nxt;};
 struct plst { struct pt *xy; struct plst *nxt;};
 
 #endif
