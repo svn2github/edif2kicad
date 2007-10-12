@@ -1,6 +1,9 @@
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	edif.y, e2net, e2sch - Frank Bennett 
 
+	20071012 fwb - multiple libs, fixed ARC, DESIGNATOR/VALUE 
+		position Demorgan convert & pin name renames
+		Looks good enough to start schematic
 	20071010 fwb - major rewrite, cleanup
 		       produces separate libs, KiCad style
 		       symbol pins are close

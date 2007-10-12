@@ -42,4 +42,4 @@ edif.c : edif.y
 
 clean :
 	rm *.o edif.c edif.output edif.tab.c edif.tab.h e2sch e2net ppedif e2lib
-	rm *.lib
+	rm *.lib 

@@ -81,5 +81,7 @@ main(int argc, char *argv[])
   fclose(FileEdf);
   fclose(FileEESchema);
   if( FileSdtLib ) fclose(FileSdtLib);
+
+  fprintf(stderr, " BonJour\n");
   return(0);
 }

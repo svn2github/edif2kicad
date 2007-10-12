@@ -56,6 +56,7 @@ main(int argc, char *argv[])
 
   Libs=NULL;
   ParseEDIF(FileEdf, stderr);
+  fprintf(stderr,"Parse Complete\n");
 
   // bubble sort cons by ref
   struct con *start, *a, *b, *c, *e = NULL, *tmp;
@@ -113,7 +114,7 @@ main(int argc, char *argv[])
   while (cons != NULL){
     if(strcmp(s1, cons->ref) != 0) {
       if(!first) fprintf(FileNet," )\n");
-      for( s=NULL, iptr=insts ; iptr != NULL ; iptr = iptr->nxt ){
+      for( s=NULL, iptr=insts ; iptr != NULL && iptr->ins != NULL ; iptr = iptr->nxt ){
 	if( !strcmp(cons->ref, iptr->ins)){
 	   s = iptr->sym;
 	   break;
@@ -133,5 +134,7 @@ main(int argc, char *argv[])
   
   if( FileNet != stdout )
     fprintf(stderr,"  output is %s \n", FileNameNet);
+
+  fprintf(stderr, " BonJour\n");
   return(0);
 }
