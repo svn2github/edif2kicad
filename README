@@ -1,34 +1,43 @@
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	edif.y, e2net, e2sch - Frank Bennett 
 
+	20071017 fwb - Schematic is useable, not perfect
+			eyespy works, PS10 doesn't
+			need to hand edit 
+				o library for PinUP, PinDown
+				o OrCad mistakes (couple Cap positions)
+			TODO:
+			 	o debug/fix PS10
+				o add TIE points
+				o try to generate a netlist from EEschema
 	20071012 fwb - multiple libs, fixed ARC, DESIGNATOR/VALUE 
-		position Demorgan convert & pin name renames
-		Looks good enough to start schematic
+			position Demorgan convert & pin name renames
+			Looks good enough to start schematic
 	20071010 fwb - major rewrite, cleanup
-		       produces separate libs, KiCad style
-		       symbol pins are close
-		       but not quite ready for primetime
-		       ARC needs some work
-		       Note:OrCad puts out multiple Instance designators
+		       	produces separate libs, KiCad style
+		       	symbol pins are close
+		       	but not quite ready for primetime
+		       	ARC needs some work
+		       	Note:OrCad puts out multiple Instance designators
 			    Program warnings only
 	20071006 fwb - fewer errors on lib browse
 		  	symbls are recognizable
 			need to work on text orientation	
 			e2net broken
-	20071005 fwb -  produces almost readable eyespy.lib
+	20071005 fwb - produces almost readable eyespy.lib
 			need to fix:
 			   DRAW
 			   P 0 0 0 0
 			after this error, ok, library browse
 			draws some stuff.
 			need to add curve/arc
-	20071003 fwb -  initial ci e2lib.c
- 	20071003 fwb - 	split main out of edif. Now have e2net, e2sch
+	20071003 fwb - initial ci e2lib.c
+ 	20071003 fwb - split main out of edif. Now have e2net, e2sch
 			this also might keep the parser clean, which will 
 			just build the structs
-        20071002 fwb - 	added a pretty print edif program (ppedif.c) and 
+        20071002 fwb - added a pretty print edif program (ppedif.c) and 
 			updated makefile
-	20070919 fwb -  Original release
+	20070919 fwb - Original release
 
 	Tools with EDIF out writer:
 	   o OrCad

@@ -148,8 +148,9 @@ typedef struct LibraryDrawPin {
 	short PinShape;			/* Bit a bit: forme de la pin (voir enum prec) */
 	char PinType;			/* type electrique de la pin */
 	char Flags;			/* bit 0 != 0: pin invisible */
-	int Num;			/* numero / ref grid array, si .Num < 0 */
+	int  Num;			/* numero / ref grid array, si .Num < 0 */
 	char * Name;
+	char * ReName;
 	short SizeNum, SizeName;	/* taille des num pin et name pin */
 	} LibraryDrawPin;
 
@@ -193,12 +194,12 @@ typedef struct LibraryStruct {
 	struct LibraryStruct *nxt;		/* Point on next lib in chain. */
 } LibraryStruct;
 
-#endif // EELIBSL_H
-
-global LibraryStruct          	*Libs,  *CurrentLib;
+global LibraryStruct          	*Libs,  *CurrentLib, *LSptr;
 global LibraryEntryStruct 	*LibEntry, *LEptr;
 global LibraryDrawEntryStruct 	*Drawing, *LDptr;
 global LibraryFieldEntry	*InsEntry;
+
+#endif // EELIBSL_H
 
 /*
 ViewRef :       VIEWREF ViewNameRef _ViewRef PopC

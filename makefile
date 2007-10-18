@@ -8,19 +8,16 @@ CFLAGS = -g
 
 SOURCES = edif.y
 
-all  :	e2net ppedif e2lib e2sch
+all  :	e2net ppedif e2sch
 
 ppedif : ppedif.o
 	cc $(CFLAGS) ppedif.c -o ppedif
 
-e2net :	ed.h e2net.o edif.o
-	cc $(CFLAGS) e2net.o edif.o -o e2net -lm
+e2net :	ed.h e2net.o edif.o savelib.o
+	cc $(CFLAGS) e2net.o edif.o savelib.o -o e2net -lm
 
-e2lib :	ed.h eelibsl.h e2lib.o edif.o savelib.o
-	cc $(CFLAGS) e2lib.o edif.o savelib.o -o e2lib -lm
-
-e2sch :	ed.h e2sch.o edif.o
-	cc $(CFLAGS) e2sch.o edif.o -o e2sch -lm
+e2sch :	ed.h e2sch.o edif.o savelib.o
+	cc $(CFLAGS) e2sch.o edif.o savelib.o -o e2sch -lm
 
 savelib : fctsys.h eelibsl.h savelib.o 
 	cc $(CFLAGS) -c savelib.c
@@ -41,5 +38,5 @@ edif.c : edif.y
 # 	cat edif.y.1 edif.y.2 > edif.y
 
 clean :
-	rm *.o edif.c edif.output edif.tab.c edif.tab.h e2sch e2net ppedif e2lib
+	rm *.o edif.c edif.output edif.tab.c edif.tab.h e2sch e2net ppedif 
 	rm *.lib 

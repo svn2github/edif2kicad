@@ -1,6 +1,104 @@
 	/************************/
 	/*	savelib.cc	*/
 	/************************/
+#include <stdio.h>
+
+#include "ed.h"
+#include "eelibsl.h"
+
+#define TEXT_SIZE 60
+FILE * FileEdf, * FileNet, * FileEESchema;
+
+OutHead(LibraryStruct * Libs)
+{
+  if(FileEESchema == NULL)
+     return;
+  fprintf(FileEESchema,"EESchema Schematic File Version 1\n");
+  fprintf(FileEESchema,"LIBS:");
+  for( ; Libs != NULL; Libs = Libs->nxt ){
+      fprintf(FileEESchema, "%s,", Libs->Name);
+  }
+  fprintf(FileEESchema,"\nEELAYER 0 0\nEELAYER END\n\n");
+
+  fprintf(FileEESchema,"$Descr B 17000 11000\n");
+  fprintf(FileEESchema,"Sheet 1 1\n");
+  fprintf(FileEESchema,"Title \"\"\n");
+  fprintf(FileEESchema,"Date \"15 oct 2007\"\n");
+  fprintf(FileEESchema,"Rev \"\"\n");
+  fprintf(FileEESchema,"Comp \"\"\n");
+  fprintf(FileEESchema,"Comment1 \"\"\n");
+  fprintf(FileEESchema,"Comment2 \"\"\n");
+  fprintf(FileEESchema,"Comment3 \"\"\n");
+  fprintf(FileEESchema,"Comment4 \"\"\n");
+  fprintf(FileEESchema,"$EndDescr\n\n");
+}
+
+#define OFF 500
+OutText(g,s,x,y,size)
+char *s;
+int   g, x,y;
+{
+  int fx, fy;
+  extern float scale;
+
+  fx = OFF + scale * (float)x; fy = OFF + scale * (float)y;
+  if(FileEESchema == NULL)
+     return;
+  if(g)
+    fprintf(FileEESchema,"Text GLabel %d %d 0 %d UnSpc\n%s\n",fx,fy,size,s);
+  else
+    fprintf(FileEESchema,"Text Label %d %d 0 %d ~\n%s\n",fx,fy,size,s);
+}
+
+OutWire(x1,y1,x2,y2)
+int x1,y1,x2,y2;
+{
+  int fx1, fy1, fx2, fy2;
+  extern float scale;
+
+  fx1 = OFF + scale * (float)x1; fy1 = OFF + scale * (float)y1;
+  fx2 = OFF + scale * (float)x2; fy2 = OFF + scale * (float)y2;
+  if(FileEESchema == NULL)
+     return;
+  fprintf(FileEESchema,"Wire Wire Line\n    %d %d %d %d\n",fx1,fy1,fx2,fy2);
+}
+
+OutInst(libsym, refdes, ox, oy, rx, ry, Rot)
+char *libsym, *refdes;
+int ox, oy, rx, ry, Rot[2][2];
+{
+extern float scale;
+
+/* example
+$Comp
+L 24C16 U1
+U 1 1 2F5F7E5C
+P 5750 9550
+F 0    "U1" H 5900 9900 60  0000 C C
+F 1 "24C16" H 5950 9200 60  0000 C C
+        1    5750 9550
+        1    0    0    -1
+$EndComp
+*/
+int fx, fy, frx, fry;
+
+  fx  = OFF + scale * (float) ox; fy  = OFF + scale * (float) oy;
+  frx = OFF + scale * (float) rx; fry = OFF + scale * (float) ry;
+  if(FileEESchema == NULL)
+     return;
+  fprintf(FileEESchema, "$Comp\n");
+  fprintf(FileEESchema,"L %s %s\n", libsym, refdes );
+  fprintf(FileEESchema,"U %d %d %8.8lX\n", 1, 1, 0l);
+  fprintf(FileEESchema,"P %d %d\n", fx, fy);
+if(refdes != NULL){
+  fprintf(FileEESchema,"F 0 \"%s\" H %d %d %d 0000\n", refdes, frx, fry, TEXT_SIZE);
+
+  fprintf(FileEESchema,"F 1 \"%s\" H %d %d %d 0000\n", libsym, fx, fy+50, TEXT_SIZE);
+}
+  fprintf(FileEESchema,"  1 %d %d\n", fx, fy);
+  fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0][0], Rot[0][1], Rot[1][0], Rot[1][1]);
+  fprintf(FileEESchema,"$EndComp\n");
+}
 
 /* Routines de sauvegarde et maintenance de librairies et composants
 */
@@ -65,6 +163,8 @@ int * ptpoly;
 int ii, t1, t2, Etype;
 char PinNum[5];
 char FlagXpin = 0;
+int x1,y1,x2,y2,r;
+extern float scale;
 
 	if( LibEntry->Type != ROOT ) return(1);
 
@@ -85,16 +185,20 @@ char FlagXpin = 0;
 		LibEntry->NumOfUnits, UNUSED, 'N');
 
 	/* Position / orientation / visibilite des champs */
+        x1 = scale*(float)LibEntry->PrefixPosX; 
+        y1 = scale*(float)LibEntry->PrefixPosY; 
 	fprintf(ExportFile,"F0 \"%s\" %d %d %d %c %c\n",
 				LibEntry->Prefix,
-				LibEntry->PrefixPosX, LibEntry->PrefixPosY,
+				x1, y1,
 				LibEntry->PrefixSize,
 				LibEntry->PrefixOrient == 0 ? 'H' : 'V',
 				LibEntry->DrawPrefix ? 'V' : 'I' );
 
+        x1 = scale*(float)LibEntry->NamePosX; 
+        y1 = scale*(float)LibEntry->NamePosY; 
 	fprintf(ExportFile,"F1 \"%s\" %d %d %d %c %c\n",
 				LibEntry->Name,
-				LibEntry->NamePosX, LibEntry->NamePosY,
+				x1, y1,
 				LibEntry->NameSize,
 				LibEntry->NameOrient == 0 ? 'H' : 'V',
 				LibEntry->DrawName ? 'V' : 'I' );
@@ -103,10 +207,13 @@ char FlagXpin = 0;
 		{
 		if( Field->Text == NULL ) continue;
 		if( strlen(Field->Text) == 0 ) continue;
+        	x1 = scale*(float)Field->PosX;
+        	y1 = scale*(float)Field->PosY;
 		fprintf(ExportFile,"F%d \"%s\" %d %d %d %c %c\n",
 				Field->FieldId,
 				Field->Text,
-				Field->PosX, Field->PosY, Field->Size,
+				x1, y1,
+				Field->Size,
 				Field->Orient == 0 ? 'H' : 'V',
 				(Field->Flags & TEXT_NO_VISIBLE) ? 'I' : 'V' );
 		}
@@ -129,9 +236,11 @@ char FlagXpin = 0;
 					#define DRAWSTRUCT     (&(DrawEntry->U.Arc))
 					t1 = DRAWSTRUCT->t1 - 1; if(t1 > 1800) t1 -= 3600;
 					t2 = DRAWSTRUCT->t2 + 1; if(t2 > 1800) t2 -= 3600;
+        				x1 = scale*(float)DRAWSTRUCT->x;
+        				y1 = scale*(float)DRAWSTRUCT->y;
+        				r  = scale*(float)DRAWSTRUCT->r;
 					fprintf(ExportFile,"A %d %d %d %d %d %d %d %d\n",
-						DRAWSTRUCT->x, DRAWSTRUCT->y,
-						DRAWSTRUCT->r, t1, t2,
+						x1, y1, r, t1, t2,
 						DrawEntry->Unit,DrawEntry->Convert, DRAWSTRUCT->width);
 					break;
 
@@ -139,8 +248,8 @@ char FlagXpin = 0;
 					#undef DRAWSTRUCT
 					#define DRAWSTRUCT (&(DrawEntry->U.Circ))
 					fprintf(ExportFile,"C %d %d %d %d %d %d\n",
-						DRAWSTRUCT->x, DRAWSTRUCT->y,
-						DRAWSTRUCT->r,
+						(int)DRAWSTRUCT->x*scale, (int)DRAWSTRUCT->y*scale,
+						(int)DRAWSTRUCT->r*scale,
 						DrawEntry->Unit,DrawEntry->Convert, DRAWSTRUCT->width);
 					break;
 
@@ -149,8 +258,11 @@ char FlagXpin = 0;
 					#define DRAWSTRUCT (&(DrawEntry->U.Text))
 					if( DRAWSTRUCT->Text != NULL &
 					    strcmp(DRAWSTRUCT->Text, " ") )
+        				x1 = scale*(float)DRAWSTRUCT->x;
+        				y1 = scale*(float)DRAWSTRUCT->y;
 					fprintf(ExportFile,"T %d %d %d %d %d %d %d %s\n",
-						DRAWSTRUCT->Horiz,DRAWSTRUCT->x, DRAWSTRUCT->y,
+						DRAWSTRUCT->Horiz,
+						x1, y1,
 						DRAWSTRUCT->size, DRAWSTRUCT->type,
 						DrawEntry->Unit,DrawEntry->Convert,
 						DRAWSTRUCT->Text );
@@ -159,9 +271,12 @@ char FlagXpin = 0;
 				case SQUARE_DRAW_TYPE:
 					#undef DRAWSTRUCT
 					#define DRAWSTRUCT (&(DrawEntry->U.Sqr))
+        				x1 = scale*(float)DRAWSTRUCT->x1;
+        				y1 = scale*(float)DRAWSTRUCT->y1;
+        				x2 = scale*(float)DRAWSTRUCT->x2;
+        				y2 = scale*(float)DRAWSTRUCT->y2;
 					fprintf(ExportFile,"S %d %d %d %d %d %d %d\n",
-					DRAWSTRUCT->x1,DRAWSTRUCT->y1,
-					DRAWSTRUCT->x2,DRAWSTRUCT->y2,
+					x1, y1, x2, y2,
 					DrawEntry->Unit,DrawEntry->Convert, DRAWSTRUCT->width);
 					break;
 
@@ -186,13 +301,18 @@ char FlagXpin = 0;
 					if(DRAWSTRUCT->Num)
 						strncpy(PinNum,(char *)(&DRAWSTRUCT->Num), 4);
 					else PinNum[0] = '0';
+					if((DRAWSTRUCT->ReName != NULL) && (DRAWSTRUCT->ReName[0] > ' '))
+						  fprintf(ExportFile,"X %s", DRAWSTRUCT->ReName);
+					else
 					if((DRAWSTRUCT->Name != NULL) && (DRAWSTRUCT->Name[0] > ' '))
 						  fprintf(ExportFile,"X %s", DRAWSTRUCT->Name);
 					else fprintf(ExportFile,"X ~");
 
+        				x1 = scale*(float)DRAWSTRUCT->posX;
+        				y1 = scale*(float)DRAWSTRUCT->posY;
 					fprintf(ExportFile," %s %d %d %d %c %d %d %d %d %c",
 						PinNum,
-						DRAWSTRUCT->posX,DRAWSTRUCT->posY,
+						x1, y1,
 						(int)DRAWSTRUCT->Len,(int)DRAWSTRUCT->Orient,
 						DRAWSTRUCT->SizeNum, DRAWSTRUCT->SizeName,
 						DrawEntry->Unit,DrawEntry->Convert, Etype);
@@ -221,7 +341,9 @@ char FlagXpin = 0;
 					ptpoly = DRAWSTRUCT->PolyList;
 					for( ii = DRAWSTRUCT->n ; ii > 0; ii-- )
 						{
-						fprintf(ExportFile,"  %d %d", *ptpoly, *(ptpoly+1) );
+						x1 = scale*(float)*ptpoly;
+						y1 = scale*(float)*(ptpoly+1);
+						fprintf(ExportFile,"  %d %d", x1, y1);
 						ptpoly += 2;
 						}
 					if (DRAWSTRUCT->Fill) fprintf(ExportFile," F");

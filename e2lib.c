@@ -1,5 +1,5 @@
 /*
- * e2sch - EDIF to KiCad schematic
+ * e2lib - EDIF to KiCad library
  */
 #define global
 
@@ -8,7 +8,7 @@
 #include "eelibsl.h"
 
 int yydebug=0;
-int bug=0;  		// debug level: 0 off, >5 netlist, >2 schematic, >8 all
+int bug=0;  		// debug level: 
 
 char *InFile = "-";
 
@@ -18,6 +18,7 @@ FILE * FileEdf, * FileNet, * FileEESchema, * FileLib=NULL;
 global char 	      		 *cur_nnam=NULL; 
 global struct inst    		 *insts=NULL, *iptr=NULL; 
 global struct con     		 *cons=NULL,  *cptr=NULL;
+global float scale;
 
 main(int argc, char *argv[])
 {
@@ -42,25 +43,16 @@ main(int argc, char *argv[])
        return(-1);
   }
 
+  sprintf(FileNameEESchema,"%s.sch",argv[1]);
+  if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
+       fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
+       return(-1);
+  }
+
   fprintf(stderr, "Parsing %s\n", InFile);
   Libs=NULL;
   ParseEDIF(FileEdf, stderr);
-
-#ifdef NOT
-  // dump connections by component
-  strcpy(s1,  "" );
-  for (start=cons ; start != NULL ; start = start->nxt ){
-      if(strcmp(s1, start->ref) != 0)
-	printf("\n");
-      printf("%4s %3s %s\n", start->ref, start->pin, start->nnam);
-      strcpy(s1,  start->ref);
-  }
-
-  while(insts != NULL){
-    printf("%5s %s\n", insts->ins, insts->sym);
-    insts = insts->nxt;
-  }
-#endif
+  fprintf(FileEESchema,"$EndSCHEMATC\n");
 
   for( ; Libs != NULL; Libs = Libs->nxt ){
 	// fprintf(FileLib,"### Library: %s ###\n", Libs->Name);
@@ -74,6 +66,7 @@ main(int argc, char *argv[])
   	fclose(FileLib);
   }
 
+  fclose(FileEESchema);
   fprintf(stderr, " BonJour\n");
   return(0);
 }

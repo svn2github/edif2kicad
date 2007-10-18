@@ -18,6 +18,7 @@ FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib=NULL;
 global char                      *cur_nnam=NULL;
 global struct inst               *insts=NULL, *iptr=NULL;
 global struct con                *cons=NULL,  *cptr=NULL;
+global float scale;
 
 main(int argc, char *argv[])
 {
@@ -42,7 +43,7 @@ main(int argc, char *argv[])
   }else{
      InFile= argv[1];
      sprintf(FileNameNet,"%s.net",argv[1]);
-     fprintf(stderr, "%s\n", InFile);
+     fprintf(stderr, "Parsing %s\n", InFile);
      if( (FileEdf = fopen( InFile, "rt" )) == NULL ) {
           fprintf(stderr, " %s non trouve\n", InFile);
           return(-1);
@@ -55,6 +56,7 @@ main(int argc, char *argv[])
   }
 
   Libs=NULL;
+  FileEESchema = NULL;
   ParseEDIF(FileEdf, stderr);
   fprintf(stderr,"Parse Complete\n");
 

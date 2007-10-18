@@ -8,25 +8,22 @@
 #include "eelibsl.h"
 
 int yydebug=0;
-int bug=0;  		// debug level: >2 netlist, >5 schematic, >8 all
+int bug=0;  		// debug level: 
 
 char *InFile = "-";
 
-char  FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
-FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib=NULL;
+char  FileNameNet[64], FileNameLib[64], FileNameEESchema[64];
+FILE * FileEdf, * FileNet, * FileEESchema, * FileLib=NULL;
 
 global char                      *cur_nnam=NULL;
 global struct inst               *insts=NULL, *iptr=NULL;
 global struct con                *cons=NULL,  *cptr=NULL;
+global float scale;
 
 main(int argc, char *argv[])
 {
   char * version      = "0.9";
   char * progname;
-
-  yydebug=0; bug=0;
-//  yydebug=0; bug=3;  
-//  yydebug=1; bug=9;
 
   progname = strrchr(argv[0],'/');
   if (progname)
@@ -41,47 +38,36 @@ main(int argc, char *argv[])
   }
 
   InFile= argv[1];
-  sprintf(FileNameEESchema,"%s.sch",argv[1]);
-  sprintf(FileNameSdtLib,"%s.src",argv[1]);
   if( (FileEdf = fopen( InFile, "rt" )) == NULL ) {
        fprintf(stderr, " %s non trouve\n", InFile);
        return(-1);
   }
 
+  sprintf(FileNameEESchema,"%s.sch",argv[1]);
   if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
        fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
        return(-1);
   }
 
-  fprintf(FileEESchema,"EESchema Schematic File Version 1\n");
-  fprintf(FileEESchema,"LIBS:none\n");
-  fprintf(FileEESchema,"EELAYER 0 0\nEELAYER END\n");
-
   Libs=NULL;
   fprintf(stderr, "Parsing %s\n", InFile);
   ParseEDIF(FileEdf, stderr);
+  fprintf(FileEESchema,"$EndSCHEMATC\n");
 
-#ifdef NOT
-  // dump connections by component
-  strcpy(s1,  "" );
-  for (start=cons ; start != NULL ; start = start->nxt ){
-      if(strcmp(s1, start->ref) != 0)
-	printf("\n");
-      printf("%4s %3s %s\n", start->ref, start->pin, start->nnam);
-      strcpy(s1,  start->ref);
+  for( ; Libs != NULL; Libs = Libs->nxt ){
+        // fprintf(FileLib,"### Library: %s ###\n", Libs->Name);
+        sprintf(FileNameLib,"%s.lib", Libs->Name);
+        if( (FileLib = fopen( FileNameLib, "wt" )) == NULL ) {
+            printf( " %s impossible a creer\n", FileNameLib);
+            return(-1);
+        }
+        fprintf(stderr," writing %s %d parts\n", FileNameLib, Libs->NumOfParts);
+        SaveActiveLibrary(FileLib, Libs );
+        fclose(FileLib);
   }
 
-  while(insts != NULL){
-    printf("%5s %s\n", insts->ins, insts->sym);
-    insts = insts->nxt;
-  }
-#endif
-
-
-  fclose(FileEdf);
   fclose(FileEESchema);
-  if( FileSdtLib ) fclose(FileSdtLib);
-
   fprintf(stderr, " BonJour\n");
   return(0);
 }
+
