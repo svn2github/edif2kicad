@@ -7,8 +7,8 @@
 #include "ed.h"
 #include "eelibsl.h"
 
-int yydebug=0;
 int bug=0;  		// debug level: 
+int yydebug=0;
 
 char *InFile = "-";
 
@@ -53,9 +53,10 @@ main(int argc, char *argv[])
   fprintf(stderr, "Parsing %s\n", InFile);
   ParseEDIF(FileEdf, stderr);
   fprintf(FileEESchema,"$EndSCHEMATC\n");
+  fclose(FileEESchema);
 
+  fprintf(stderr, "Writting Libs \n");
   for( ; Libs != NULL; Libs = Libs->nxt ){
-        // fprintf(FileLib,"### Library: %s ###\n", Libs->Name);
         sprintf(FileNameLib,"%s.lib", Libs->Name);
         if( (FileLib = fopen( FileNameLib, "wt" )) == NULL ) {
             printf( " %s impossible a creer\n", FileNameLib);
@@ -66,7 +67,6 @@ main(int argc, char *argv[])
         fclose(FileLib);
   }
 
-  fclose(FileEESchema);
   fprintf(stderr, " BonJour\n");
   return(0);
 }

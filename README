@@ -1,6 +1,7 @@
 	-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	edif.y, e2net, e2sch - Frank Bennett 
 
+	20071023 fwb - clean up, fix core crash, pin visability
 	20071017 fwb - Schematic is useable, not perfect
 			eyespy works, PS10 doesn't
 			need to hand edit 
@@ -59,27 +60,36 @@
 	makefile	- Unix style makefile, runs Bison & runs gcc
 	ppedif.c	- pretty print EDIF
 	edif.y  	- edif BNF Grammer, yylex, & main.c
-	PS10      	- OrCad schematic in EDIF format
-	PS10.EDF  	- Original Ps10
+	savlib.c	- output format
+	e2net.c		- EDIF to netlist main
+	e2sch.c		- EDIF to libs, schematic main
+	e2lib.c		- EDIF to libs (obsolete)
+	examples/
+	eyespy		- ORCad schematic (ATX PS)
+	PS10      	- OrCad schematic in EDIF format(reformated)
+	PS10.EDF  	- Original PS10
 	PS10.pdf  	- PS10 schematic
 	PS10.net  	- KiCad netlist output see below
 	batest.1  	- edif test file
 	batest.2  	- edif test file
 	hptest      	- edif test file
 	hptest.net	- KiCad netlist output see below
-	bugin.net    	- KiCad bug, pin name truncated
-	bugout.net   	- KiCad bug, pin name truncated
 
 	Tested under Linux and cygwin
 
-	Install:
+	Install: (./run_tests or)
 		make
 		cd examples
 		../ppedif < PS10.EDF > PS10
 		../e2net < PS10 > PS10.net or
 		../e2net PS10 or 
 		../e2net hptest or
-		../e2lib examples/PS10
+		../e2sch examples/eyespy
+		../e2sch examples/PS10
+		../e2sch examples/BCD
+
+        Notes:
+		e2lib is now obsolute
 
 	Edif Notes:
 	o hptest is more readable for parser debugging. This begs for

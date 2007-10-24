@@ -31,6 +31,7 @@ OutHead(LibraryStruct * Libs)
   fprintf(FileEESchema,"Comment3 \"\"\n");
   fprintf(FileEESchema,"Comment4 \"\"\n");
   fprintf(FileEESchema,"$EndDescr\n\n");
+  fflush(FileEESchema);
 }
 
 #define OFF 500
@@ -38,16 +39,18 @@ OutText(g,s,x,y,size)
 char *s;
 int   g, x,y;
 {
-  int fx, fy;
+  int fx, fy, fs;
   extern float scale;
 
   fx = OFF + scale * (float)x; fy = OFF + scale * (float)y;
+  fs = scale * (float)size;
   if(FileEESchema == NULL)
      return;
   if(g)
-    fprintf(FileEESchema,"Text GLabel %d %d 0 %d UnSpc\n%s\n",fx,fy,size,s);
+    fprintf(FileEESchema,"Text GLabel %d %d 0 %d UnSpc\n%s\n",fx,fy,fs,s);
   else
-    fprintf(FileEESchema,"Text Label %d %d 0 %d ~\n%s\n",fx,fy,size,s);
+    fprintf(FileEESchema,"Text Label %d %d 0 %d ~\n%s\n",fx,fy,fs,s);
+  fflush(FileEESchema);
 }
 
 OutWire(x1,y1,x2,y2)
@@ -61,6 +64,7 @@ int x1,y1,x2,y2;
   if(FileEESchema == NULL)
      return;
   fprintf(FileEESchema,"Wire Wire Line\n    %d %d %d %d\n",fx1,fy1,fx2,fy2);
+  fflush(FileEESchema);
 }
 
 OutInst(libsym, refdes, ox, oy, rx, ry, Rot)
@@ -91,13 +95,13 @@ int fx, fy, frx, fry;
   fprintf(FileEESchema,"U %d %d %8.8lX\n", 1, 1, 0l);
   fprintf(FileEESchema,"P %d %d\n", fx, fy);
 if(refdes != NULL){
-  fprintf(FileEESchema,"F 0 \"%s\" H %d %d %d 0000\n", refdes, frx, fry, TEXT_SIZE);
-
-  fprintf(FileEESchema,"F 1 \"%s\" H %d %d %d 0000\n", libsym, fx, fy+50, TEXT_SIZE);
+  fprintf(FileEESchema,"F 0 \"%s\" H %d %d %d 0001\n", refdes, frx, fry, TEXT_SIZE);
 }
+  fprintf(FileEESchema,"F 1 \"%s\" H %d %d %d 0001\n", libsym, fx, fy+50, TEXT_SIZE);
   fprintf(FileEESchema,"  1 %d %d\n", fx, fy);
   fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0][0], Rot[0][1], Rot[1][0], Rot[1][1]);
   fprintf(FileEESchema,"$EndComp\n");
+  fflush(FileEESchema);
 }
 
 /* Routines de sauvegarde et maintenance de librairies et composants
@@ -247,9 +251,11 @@ extern float scale;
 				case CIRCLE_DRAW_TYPE:
 					#undef DRAWSTRUCT
 					#define DRAWSTRUCT (&(DrawEntry->U.Circ))
+        				x1 = scale*(float)DRAWSTRUCT->x;
+        				y1 = scale*(float)DRAWSTRUCT->y;
+        				r  = scale*(float)DRAWSTRUCT->r;
 					fprintf(ExportFile,"C %d %d %d %d %d %d\n",
-						(int)DRAWSTRUCT->x*scale, (int)DRAWSTRUCT->y*scale,
-						(int)DRAWSTRUCT->r*scale,
+						x1, y1, r,
 						DrawEntry->Unit,DrawEntry->Convert, DRAWSTRUCT->width);
 					break;
 
@@ -310,12 +316,15 @@ extern float scale;
 
         				x1 = scale*(float)DRAWSTRUCT->posX;
         				y1 = scale*(float)DRAWSTRUCT->posY;
+					x2 = scale*(float)DRAWSTRUCT->SizeNum;
+					y2 = scale*(float)DRAWSTRUCT->SizeName;
+
 					fprintf(ExportFile," %s %d %d %d %c %d %d %d %d %c",
 						PinNum,
 						x1, y1,
 						(int)DRAWSTRUCT->Len,(int)DRAWSTRUCT->Orient,
-						DRAWSTRUCT->SizeNum, DRAWSTRUCT->SizeName,
-						DrawEntry->Unit,DrawEntry->Convert, Etype);
+						x2,y2,
+						DrawEntry->Unit, DrawEntry->Convert, Etype);
 
 					if( (DRAWSTRUCT->PinShape) || (DRAWSTRUCT->Flags & PINNOTDRAW) )
 						fprintf(ExportFile," ");
