@@ -38,14 +38,14 @@ global float  scale;
 LibraryEntryStruct	 *LEptr;
 LibraryDrawEntryStruct   *New=NULL, *INew, *LDptr;
 int  		 num, *Poly, TextSize=SIZE_PIN_TEXT;
-char 		*bad="BBBB", *s, fname[30], **eptr;
+char 		*bad="BBBB", *s, fname[30], **eptr, maxs[PART_NAME_LEN+1];
 struct plst 	*pl;
 struct st	*stp, *ref, *val;
 int convert=1;	  // normal
 int savtext=0;    // debug - no text
 int skip=1;       // debug - skip for now
 float a,b,c,d,e,f,k,h;
-int Rot[2][2], Rot90=0, tx, ty, ox=0, oy=0, stop;
+int Rot[2][2], Rot90=0, x,y, tx, ty, ox=0, oy=0, stop;
 int SchHead=1;
 
 %}
@@ -582,7 +582,7 @@ BoundBox    :	BOUNDINGBOX Rectangle PopC
 
 CellNameDef :	NameDef
 		{ 
-		if(bug>2)fprintf(Error,"CurrLib %s CellNameDef: '%s'\n", CurrentLib->Name, $1->s); 
+		if(bug>2)fprintf(Error,"\nCurrLib %s CellNameDef: '%s'\n", CurrentLib->Name, $1->s); 
 
 		if(bug>4)fprintf(Error,"New LibraryEntryStruct\n");
   		LibEntry = (LibraryEntryStruct *) Malloc(sizeof(LibraryEntryStruct));
@@ -603,15 +603,13 @@ CellNameDef :	NameDef
   		LibEntry->Drawings = NULL;
                 LibEntry->nxt = CurrentLib->Entries;
                 CurrentLib->Entries = LibEntry; CurrentLib->NumOfParts++;
+		strncpy(LibEntry->Name, $1->s, PART_NAME_LEN);
+		LibEntry->DrawName = 1;
 		}
 	    ;
 
 Cell        :	CELL CellNameDef _Cell PopC
-		{
-		$$=$2;
-		strcpy(LibEntry->Name, $2->s);
-		LibEntry->DrawName = 0;
-		}
+		{ $$=$2; }
             ;
 
 _Cell       :	CellType
@@ -649,12 +647,12 @@ CellRef     :	CELLREF CellNameRef _CellRef PopC
                     LibEntry->NumOfUnits = 1;
 		    LibEntry->Fields = NULL;
                     strcpy(LibEntry->Prefix, "U");
-                    strcpy(LibEntry->Name, $2->s);
+                    strncpy(LibEntry->Name, $2->s, PART_NAME_LEN);
                     LibEntry->nxt = CurrentLib->Entries;
                     CurrentLib->Entries = LibEntry; 
 		    CurrentLib->NumOfParts++;
 
-		val=$2;
+		val = $2;
 		}
 	    ;
 
@@ -1337,17 +1335,19 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 		if(bug>2 && val->s != NULL)fprintf(Error," INSTANCE:%s '%s' \n", $2->s, val->s );
 		if(bug>2 && val->s == NULL)fprintf(Error," INSTANCE:%s '' \n", $2->s );
 
-		strcpy(LibEntry->Name, $2->s);
+		strncpy(LibEntry->Name, $2->s, PART_NAME_LEN);
 
 		if( val != NULL ){
 		   if(ref == NULL) {
 		       s=(char *)Malloc(strlen($2->s)+1); 
-		       strcpy(s,"#"); s=strcat(s,$2->s);
+		       s[0]='#'; s[1]=0; s=strcat(s,$2->s);
 		       if(bug>2)fprintf(Error," Out:Inst '%s' '%s' %d %d \n", val->s, s, tx, ty);
-		       OutInst(val->s, s,      tx, -ty,        tx,        -ty, Rot);
+		       strncpy(maxs, val->s, PART_NAME_LEN);
+		       OutInst(maxs, $2->s,  tx, -ty,        tx,        -ty, Rot);
 		   }else{
 		       if(bug>2)fprintf(Error," Out:Inst '%s' '%s' %d %d \n", val->s, ref->s, tx, ty);
-		       OutInst(val->s, ref->s, tx, -ty, ref->p->x, -ref->p->y, Rot);
+		       strncpy(maxs, val->s, PART_NAME_LEN);
+		       OutInst(maxs, ref->s, tx, -ty, ref->p->x, -ref->p->y, Rot);
 	           }
 		}
 		}
@@ -2232,11 +2232,16 @@ _Port :		PortNameDef
                     New->U.Pin.Flags    = 1;           	/* Pin InVisible */
                     New->U.Pin.SizeNum  = TextSize;
                     New->U.Pin.SizeName = TextSize;
-		    if($1->nxt != NULL)
+		    New->U.Pin.Num[0]='0'; New->U.Pin.Num[4]=0;
+		    if($1->nxt != NULL){
 		        New->U.Pin.ReName = $1->nxt->s;
-		    else
+		        strncpy(New->U.Pin.Num, $1->nxt->s, 4); // default pin#
+		    }else{
 		        New->U.Pin.ReName = NULL;
+		        strncpy(New->U.Pin.Num, $1->s, 4); // default pin#
+		    }
 		    New->U.Pin.Name = $1->s;
+		    if(bug>2)fprintf(Error," _Port PortNameDef Pin:'%s':'%s'\n", New->U.Pin.Name, New->U.Pin.Num);
 		}
       |		_Port Direction
                 {
@@ -2247,9 +2252,11 @@ _Port :		PortNameDef
       |		_Port Designator
                 {
 		$$=$2; if(bug>2)fprintf(Error," _Port Designator '%s'\n", $2->s);
-		    strncpy((char*)&New->U.Pin.Num, $2->s, 4);
-		    if( !strcmp($2->s, ""))
+		    // memset(New->U.Pin.Num, 0, 5); New->U.Pin.Num[0]='0'; 
+		    if(!strcmp($2->s, "") ){
 			LibEntry->DrawPinNum=0;
+		    }else
+		    	strncpy(New->U.Pin.Num, $2->s, 4);
 		}
       |		_Port DcFanInLoad
       |		_Port DcFanOutLoad
@@ -2491,6 +2498,29 @@ Property  :	PROPERTY PropNameDef _Property PopC
 			    if(bug>2)fprintf(Error," Set VIS %s\n", LDptr->U.Pin.Name);
 		    	    LDptr->U.Pin.Flags = 0;  // set Visable
 		        }
+		    }
+		    if( !strcmp($2->s, "EDIFHOTSPOT") ){
+			sscanf($3->s,"(pt %d %d", &x, &y);
+			if(bug>2)fprintf(Error,"  %s '%s' '%s' %d %d\n", LibEntry->Name, $2->s, $3->s, x,y);
+
+			New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+			New->DrawType = PIN_DRAW_TYPE; New->Convert = convert;
+			New->nxt = LibEntry->Drawings;
+			LibEntry->Drawings = New;
+			New->Unit = 1;                      // PartPerPack-ii;
+			New->U.Pin.posX     = x;
+			New->U.Pin.posY     = y;
+			New->U.Pin.Len      = 0;
+			New->U.Pin.PinShape = NONE;         // NONE, DOT, CLOCK, SHORT
+			New->U.Pin.PinType  = PIN_POWER;
+			New->U.Pin.Orient   = PIN_UP;
+			New->U.Pin.Flags    = 1;            /* Pin InVisible */
+			New->U.Pin.SizeNum  = TextSize;
+			New->U.Pin.SizeName = TextSize;
+			New->U.Pin.ReName = NULL;
+			New->U.Pin.Name   = (char *)strndup(LibEntry->Name, 3);
+			// New->U.Pin.Name      = NULL;
+			strcpy(New->U.Pin.Num, "1");
 		    }
 		}
 		}

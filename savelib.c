@@ -303,10 +303,12 @@ extern float scale;
 						case PIN_OPENCOLLECTOR: Etype = 'C'; break;
 						case PIN_OPENEMITTER:	Etype = 'E'; break;
 						}
-					memset(PinNum,0, sizeof(PinNum) );
-					if(DRAWSTRUCT->Num)
-						strncpy(PinNum,(char *)(&DRAWSTRUCT->Num), 4);
-					else PinNum[0] = '0';
+					// memset(PinNum,0, sizeof(PinNum) );
+					// PinNum[0] = '0';
+					// strcpy(PinNum, "0");
+					// if(DRAWSTRUCT->Num)
+					//  strncpy(PinNum,DRAWSTRUCT->Num, 4);
+
 					if((DRAWSTRUCT->ReName != NULL) && (DRAWSTRUCT->ReName[0] > ' '))
 						  fprintf(ExportFile,"X %s", DRAWSTRUCT->ReName);
 					else
@@ -320,7 +322,7 @@ extern float scale;
 					y2 = scale*(float)DRAWSTRUCT->SizeName;
 
 					fprintf(ExportFile," %s %d %d %d %c %d %d %d %d %c",
-						PinNum,
+						DRAWSTRUCT->Num, // PinNum,
 						x1, y1,
 						(int)DRAWSTRUCT->Len,(int)DRAWSTRUCT->Orient,
 						x2,y2,

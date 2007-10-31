@@ -1892,7 +1892,7 @@
    (cellType GENERIC)
    (view(rename NORMAL "Normal")
     (viewType SCHEMATIC)
-    ( interface(designator "J")
+    (interface(designator "J")
      (port(rename &1 "1")
       (property(rename PORTTYPE "PORTTYPE")
        (string "nonLogical")
@@ -2459,7 +2459,8 @@
      (property(rename NAME "Name")
       (string "VCC_BAR")))
     (contents(commentGraphics)
-     (figure BODY(path(pointList(pt 100 0)
+     (figure BODY
+      (path(pointList(pt 100 0)
         (pt 100 -100)))
       (path(pointList(pt 50 0)
         (pt 150 0)))))))
@@ -2476,7 +2477,8 @@
      (property(rename NAME "Name")
       (string "GND_SIGNAL")))
     (contents(commentGraphics)
-     (figure BODY(path(pointList(pt 0 0)
+     (figure BODY
+      (path(pointList(pt 0 0)
         (pt 200 0)))
       (path(pointList(pt 200 0)
         (pt 100 -100)))

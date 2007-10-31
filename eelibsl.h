@@ -148,7 +148,7 @@ typedef struct LibraryDrawPin {
 	short PinShape;			/* Bit a bit: forme de la pin (voir enum prec) */
 	char PinType;			/* type electrique de la pin */
 	char Flags;			/* bit 0 != 0: pin invisible */
-	int  Num;			/* numero / ref grid array, si .Num < 0 */
+	char  Num[5];			/* numero / ref grid array, si .Num < 0  4 chars */
 	char * Name;
 	char * ReName;
 	short SizeNum, SizeName;	/* taille des num pin et name pin */

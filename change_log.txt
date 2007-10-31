@@ -1,0 +1,56 @@
+change_log.txt
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-oct-30 fwb 
+	fixed CAPSYM.lib - power syms
+	better netlist - caps have VCC & GND
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-oct-23 fwb - clean up, fix core crash, pin visability
+	TODO:
+		o fix Power connections
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-oct-17 fwb - Schematic is useable, not perfect
+	eyespy works, PS10 doesn't
+	need to hand edit 
+	o library for PinUP, PinDown
+	o OrCad mistakes (couple Cap positions)
+	TODO:
+	 	o debug/fix PS10
+		o add TIE points
+		o try to generate a netlist from EEschema
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-Oct-12 fwb - multiple libs, fixed ARC, DESIGNATOR/VALUE 
+	position Demorgan convert & pin name renames
+	Looks good enough to start schematic
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-Oct-10 fwb - major rewrite, cleanup
+       	produces separate libs, KiCad style
+       	symbol pins are close
+       	but not quite ready for primetime
+       	ARC needs some work
+       	Note:OrCad puts out multiple Instance designators
+	    Program warnings only
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-oct-06 fwb - fewer errors on lib browse
+  	symbls are recognizable
+	need to work on text orientation	
+	e2net broken
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-oct-05 fwb - produces almost readable eyespy.lib
+	need to fix:
+	   DRAW
+	   P 0 0 0 0
+	after this error, ok, library browse
+	draws some stuff.
+	need to add curve/arc
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-oct-03 fwb - initial ci e2lib.c
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+20071003 fwb - split main out of edif. Now have e2net, e2sch
+	this also might keep the parser clean, which will 
+	just build the structs
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-oct-02 fwb - added a pretty print edif program (ppedif.c) and 
+	updated makefile
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-sep-19 fwb - Original release
+
