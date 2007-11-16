@@ -1321,7 +1321,7 @@ InstNameDef :	NameDef
 		{if(bug>2)fprintf(Error,"\n%5d InstNameDef: '%s'\n",LineNumber, $1->s); 
 		if( SchHead ){
 		    if(bug>2)fprintf(Error," Out:Head'%s' \n", Libs->Name);
-		    OutHead(Libs); SchHead=0;
+		    OutHead(Libs); OutPro(Libs); SchHead=0;
 		}
 		ref=val=NULL;
                 LibEntry->DrawName = 0;
@@ -2518,7 +2518,8 @@ Property  :	PROPERTY PropNameDef _Property PopC
 			New->U.Pin.SizeNum  = TextSize;
 			New->U.Pin.SizeName = TextSize;
 			New->U.Pin.ReName = NULL;
-			New->U.Pin.Name   = (char *)strndup(LibEntry->Name, 3);
+			// New->U.Pin.Name   = (char *)strndup(LibEntry->Name, 3);
+			New->U.Pin.Name   = &LibEntry->Name;
 			// New->U.Pin.Name      = NULL;
 			strcpy(New->U.Pin.Num, "1");
 		    }

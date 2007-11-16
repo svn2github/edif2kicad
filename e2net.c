@@ -12,8 +12,8 @@ int bug=0;  		// debug level: >2 netlist, >5 schematic, >8 all
 
 char *InFile = "-";
 
-char FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64];
-FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib=NULL;
+char FileNameNet[64], FileNameSdtLib[64], FileNameEESchema[64], FileNameKiPro[64];
+FILE * FileEdf, * FileNet, * FileEESchema, * FileSdtLib=NULL, * FileKiPro=NULL;
 
 global char                      *cur_nnam=NULL;
 global struct inst               *insts=NULL, *iptr=NULL;

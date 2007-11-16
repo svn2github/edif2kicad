@@ -1,5 +1,9 @@
 change_log.txt
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-nov-16 fwb
+	removed strndup from edif.y
+	added OutPro function to generate a .pro file with libs listed
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2007-oct-30 fwb 
 	fixed CAPSYM.lib - power syms
 	better netlist - caps have VCC & GND

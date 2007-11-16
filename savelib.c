@@ -7,7 +7,45 @@
 #include "eelibsl.h"
 
 #define TEXT_SIZE 60
-FILE * FileEdf, * FileNet, * FileEESchema;
+FILE * FileEdf, * FileNet, * FileEESchema, * FileKiPro ;
+
+OutPro(LibraryStruct * Libs)
+{
+  int i;
+
+  if(FileKiPro == NULL)
+     return;
+  fprintf(FileKiPro,"update=16/11/2007-20:11:59\n");
+  fprintf(FileKiPro,"last_client=eeschema\n");
+  fprintf(FileKiPro,"[eeschema]\n");
+  fprintf(FileKiPro,"version=1\n");
+  fprintf(FileKiPro,"LibDir=/s/opt/kicad_design/test\n");
+  fprintf(FileKiPro,"NetFmt=1\n");
+  fprintf(FileKiPro,"HPGLSpd=20\n");
+  fprintf(FileKiPro,"HPGLDm=15\n");
+  fprintf(FileKiPro,"HPGLNum=1\n");
+  fprintf(FileKiPro,"offX_A=0\n");
+  fprintf(FileKiPro,"offY_A=0\n");
+  fprintf(FileKiPro,"offX_B=0\n");
+  fprintf(FileKiPro,"offY_B=0\n");
+  fprintf(FileKiPro,"offX_C=0\n");
+  fprintf(FileKiPro,"offY_C=0\n");
+  fprintf(FileKiPro,"offX_D=0\n");
+  fprintf(FileKiPro,"offY_D=0\n");
+  fprintf(FileKiPro,"offX_E=0\n");
+  fprintf(FileKiPro,"offY_E=0\n");
+  fprintf(FileKiPro,"RptD_X=0\n");
+  fprintf(FileKiPro,"RptD_Y=100\n");
+  fprintf(FileKiPro,"RptLab=1\n");
+  fprintf(FileKiPro,"SimCmd=\n");
+  fprintf(FileKiPro,"UseNetN=0\n");
+  fprintf(FileKiPro,"LabSize=60\n");
+  fprintf(FileKiPro,"[eeschema/libraries]\n");
+
+  for( i=1; Libs != NULL; i++, Libs = Libs->nxt ){
+      fprintf(FileKiPro, "LibName%d=%s\n", i, Libs->Name);
+  }
+}
 
 OutHead(LibraryStruct * Libs)
 {

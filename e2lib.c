@@ -12,8 +12,8 @@ int bug=0;  		// debug level:
 
 char *InFile = "-";
 
-char  FileNameNet[64], FileNameLib[64], FileNameEESchema[64];
-FILE * FileEdf, * FileNet, * FileEESchema, * FileLib=NULL;
+char  FileNameNet[64], FileNameLib[64], FileNameEESchema[64], FileNameKiPro[64];
+FILE * FileEdf, * FileNet, * FileEESchema, * FileLib=NULL, * FileKiPro=NULL;
 
 global char 	      		 *cur_nnam=NULL; 
 global struct inst    		 *insts=NULL, *iptr=NULL; 
@@ -46,6 +46,12 @@ main(int argc, char *argv[])
   sprintf(FileNameEESchema,"%s.sch",argv[1]);
   if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
        fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
+       return(-1);
+  }
+
+  sprintf(FileNameKiPro,"%s.pro",argv[1]);
+  if( (FileKiPro = fopen( FileNameKiPro, "wt" )) == NULL ) {
+       fprintf(stderr, " %s impossible a creer\n", FileNameKiPro);
        return(-1);
   }
 
