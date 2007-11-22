@@ -19,7 +19,7 @@ OutPro(LibraryStruct * Libs)
   fprintf(FileKiPro,"last_client=eeschema\n");
   fprintf(FileKiPro,"[eeschema]\n");
   fprintf(FileKiPro,"version=1\n");
-  fprintf(FileKiPro,"LibDir=/s/opt/kicad_design/test\n");
+  fprintf(FileKiPro,"LibDir=%s\n", "."); // system("pwd"));
   fprintf(FileKiPro,"NetFmt=1\n");
   fprintf(FileKiPro,"HPGLSpd=20\n");
   fprintf(FileKiPro,"HPGLDm=15\n");
@@ -362,7 +362,8 @@ extern float scale;
 					fprintf(ExportFile," %s %d %d %d %c %d %d %d %d %c",
 						DRAWSTRUCT->Num, // PinNum,
 						x1, y1,
-						(int)DRAWSTRUCT->Len,(int)DRAWSTRUCT->Orient,
+						(int)DRAWSTRUCT->Len,
+						(DRAWSTRUCT->Orient==0)?'L':DRAWSTRUCT->Orient,
 						x2,y2,
 						DrawEntry->Unit, DrawEntry->Convert, Etype);
 

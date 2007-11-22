@@ -1,5 +1,13 @@
 change_log.txt
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-nov-21 fwb
+	fixed property property integer
+	multi segment WIRE - OrCad ver 10
+	text size per FigGrp
+	pick up Instance Ref Designator
+   TODO
+	remove XTIEs form netlist
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2007-nov-16 fwb
 	removed strndup from edif.y
 	added OutPro function to generate a .pro file with libs listed

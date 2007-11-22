@@ -34,6 +34,12 @@ struct con  {
   struct con    *nxt;
 };
 
+struct FigGrpStruct {
+        char Name[20];
+        int  PathWidth, Color, TextHeight, Visible;
+        struct FigGrpStruct * nxt;
+        }; 
+
 struct plst { int x, y; struct plst *nxt;};
 struct st   { char *s; struct plst *p; int n; struct st *nxt;};
 
