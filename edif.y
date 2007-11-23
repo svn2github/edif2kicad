@@ -1466,8 +1466,8 @@ _Interface :
 	   |	_Interface Timing
 	   |	_Interface Simulate
 	   |	_Interface Designator
-		{ $$=$2; 
-		strcpy(LibEntry->Prefix, $2->s); 
+		{$$=$2; if(bug>2)fprintf(Error," _Interface Desig '%s'\n", $2->s);
+		 strcpy(LibEntry->Prefix, $2->s); 
 		}
 	   |	_Interface Property
 	   |	_Interface Comment
@@ -2356,6 +2356,7 @@ _PortImpl :	Name
 		}
 	  |	Ident
 		{if(bug>2)fprintf(Error," _PortImpl Ident '%s'\n", $1->s);
+		 cur_pnam = $1->s;
 		}
 	  |	_PortImpl ConnectLoc
 		{$$=$2; 
