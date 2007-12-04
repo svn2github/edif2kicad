@@ -105,6 +105,16 @@ int x1,y1,x2,y2;
   fflush(FileEESchema);
 }
 
+OutConn(ox,oy)
+int ox, oy;
+{
+extern float scale;
+int fx, fy;
+
+  fx  = OFF + scale * (float) ox; fy  = OFF + scale * (float) oy;
+  fprintf(FileEESchema,"Connection ~ %d %d\n", fx, fy);
+}
+
 OutInst(libsym, refdes, ox, oy, rx, ry, Rot)
 char *libsym, *refdes;
 int ox, oy, rx, ry, Rot[2][2];

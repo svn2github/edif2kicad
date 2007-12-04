@@ -1357,7 +1357,12 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 		strncpy(LibEntry->Name, $2->s, PART_NAME_LEN);
 
 		if( val != NULL ){
-		   if(ref == NULL) {
+		   if(strstr(val->s, "JUNCTION")!=NULL ||
+		      strstr(val->s, "XTIE")){
+	  	      if(bug>2)fprintf(Error," Out:Conn '%s' %d %d \n", val->s, tx, ty);
+		      OutConn( tx, -ty);
+		   }
+		   else if(ref == NULL) {
 		       s=(char *)Malloc(strlen($2->s)+1); 
 		       s[0]='#'; s[1]=0; s=strcat(s,$2->s);
 		       if(bug>2)fprintf(Error," Out:Inst '%s' '%s' %d %d \n", val->s, s, tx, ty);
@@ -2880,7 +2885,7 @@ _Technology :	NumberDefn
 
 TextHeight :	TEXTHEIGHT Int PopC
 		{$$=$2; TextSize = $2;
-		 if(bug>0)fprintf(Error,"TextHeight %d\n", $2);
+		 if(bug>2)fprintf(Error,"TextHeight %d\n", $2);
 		}
 	   ;
 

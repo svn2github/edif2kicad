@@ -1,5 +1,9 @@
 change_log.txt
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2007-dec-3  fwb
+	demote symbols (*XTIE* or *JUNCTION*) to connections
+	improving netlist quality
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2007-nov-21 fwb
 	fixed property property integer
 	multi segment WIRE - OrCad ver 10
