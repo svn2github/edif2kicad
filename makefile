@@ -40,3 +40,4 @@ edif.c : edif.y
 clean :
 	rm *.o edif.c edif.output edif.tab.c edif.tab.h e2sch e2net ppedif 
 	rm *.lib  examples/*.sch examples/*.pro	
+	rm e2net.exe  e2sch.exe  ppedif.exe
