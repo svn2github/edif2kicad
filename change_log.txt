@@ -1,5 +1,13 @@
 change_log.txt
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2008-Feb-6  fwb
+	improved text scaling
+ 	automatically compute pin lenght and orientation
+	Instances were getting confused with CellDefs
+	Circles & Rectangles seem to be correct now
+	Design can now include CellDefs
+	e2sch works with OrCad version 9 , EDIF from ver 10 has problems
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2007-dec-3  fwb
 	demote symbols (*XTIE* or *JUNCTION*) to connections
 	improving netlist quality

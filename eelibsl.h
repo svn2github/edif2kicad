@@ -13,7 +13,7 @@
 
 #define BooleanType char
 
-#define PART_NAME_LEN	15		/* Maximum length of part name. */
+#define PART_NAME_LEN	25		/* Maximum length of part name. */
 #define PREFIX_NAME_LEN	5		/* Maximum length of prefix (IC, R, SW etc.). */
 #define PIN_SEPERATOR	"\n"	/* See Pins in LibraryEntryStruct. */
 #define FILE_IDENT "EESchema-LIBRARY Version 2.0"  /* Must be at the lib file start. */
@@ -60,10 +60,11 @@ typedef enum {		/* Forme des Pins */
 	} DrawPinShape;
 
 typedef enum {			/* Orientation des Pins */
+	PIN_N     = 'N',  // normal, no rotation
 	PIN_RIGHT = 'R',
-	PIN_LEFT = 'L',
-	PIN_UP = 'U',
-	PIN_DOWN = 'D',
+	PIN_LEFT  = 'L',
+	PIN_UP    = 'U',
+	PIN_DOWN  = 'D',
 	} DrawPinOrient;
 
 typedef enum

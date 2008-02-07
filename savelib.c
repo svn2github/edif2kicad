@@ -73,6 +73,7 @@ OutHead(LibraryStruct * Libs)
 }
 
 #define OFF 500
+// #define OFF 0
 OutText(g,s,x,y,size)
 char *s;
 int   g, x,y;
@@ -81,7 +82,7 @@ int   g, x,y;
   extern float scale;
 
   fx = OFF + scale * (float)x; fy = OFF + scale * (float)y;
-  fs = scale * (float)size;
+  fs = 0.55*scale * (float)size;  // fixme - fwb
   if(FileEESchema == NULL)
      return;
   if(g)
@@ -226,7 +227,7 @@ extern float scale;
 	/* Generation des lignes utiles */
 	fprintf(ExportFile,"DEF");
 	if(LibEntry->DrawName) fprintf(ExportFile," %s",LibEntry->Name);
-	else fprintf(ExportFile," ~%s",LibEntry->Name);
+	else 		       fprintf(ExportFile," ~%s",LibEntry->Name);
 
 	if(LibEntry->Prefix[0] > ' ') fprintf(ExportFile," %s",LibEntry->Prefix);
 	else fprintf(ExportFile," ~");
@@ -329,9 +330,9 @@ extern float scale;
         				y1 = scale*(float)DRAWSTRUCT->y1;
         				x2 = scale*(float)DRAWSTRUCT->x2;
         				y2 = scale*(float)DRAWSTRUCT->y2;
-					fprintf(ExportFile,"S %d %d %d %d %d %d %d\n",
+					fprintf(ExportFile,"S %d %d %d %d %d %d %d N\n",
 					x1, y1, x2, y2,
-					DrawEntry->Unit,DrawEntry->Convert, DRAWSTRUCT->width);
+					DrawEntry->Unit, DrawEntry->Convert, DRAWSTRUCT->width);
 					break;
 
 				case PIN_DRAW_TYPE:
@@ -339,18 +340,17 @@ extern float scale;
 					#define DRAWSTRUCT (&(DrawEntry->U.Pin))
 					FlagXpin = 1;
 					Etype = 'I';
-						switch(DRAWSTRUCT->PinType)
-						{
-						case PIN_INPUT: Etype = 'I'; break;
-						case PIN_OUTPUT: Etype = 'O'; break;
-						case PIN_BIDI: Etype = 'B'; break;
-						case PIN_TRISTATE: Etype = 'T'; break;
-						case PIN_PASSIVE: Etype = 'P'; break;
-						case PIN_UNSPECIFIED: Etype = 'U'; break;
-						case PIN_POWER: Etype = 'W'; break;
+					switch(DRAWSTRUCT->PinType) {
+						case PIN_INPUT: 	Etype = 'I'; break;
+						case PIN_OUTPUT: 	Etype = 'O'; break;
+						case PIN_BIDI: 		Etype = 'B'; break;
+						case PIN_TRISTATE: 	Etype = 'T'; break;
+						case PIN_PASSIVE: 	Etype = 'P'; break;
+						case PIN_UNSPECIFIED: 	Etype = 'U'; break;
+						case PIN_POWER: 	Etype = 'W'; break;
 						case PIN_OPENCOLLECTOR: Etype = 'C'; break;
 						case PIN_OPENEMITTER:	Etype = 'E'; break;
-						}
+					}
 					// memset(PinNum,0, sizeof(PinNum) );
 					// PinNum[0] = '0';
 					// strcpy(PinNum, "0");
@@ -366,8 +366,8 @@ extern float scale;
 
         				x1 = scale*(float)DRAWSTRUCT->posX;
         				y1 = scale*(float)DRAWSTRUCT->posY;
-					x2 = scale*(float)DRAWSTRUCT->SizeNum;
-					y2 = scale*(float)DRAWSTRUCT->SizeName;
+					x2 = 0.55*scale*(float)DRAWSTRUCT->SizeNum; // fwb
+					y2 = 0.55*scale*(float)DRAWSTRUCT->SizeName;
 
 					fprintf(ExportFile," %s %d %d %d %c %d %d %d %d %c",
 						DRAWSTRUCT->Num, // PinNum,
