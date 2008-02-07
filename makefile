@@ -4,6 +4,7 @@
 
 # CFLAGS = -DDEBUG
 # CFLAGS = -O
+CC	   = gcc
 CFLAGS = -g
 
 SOURCES = edif.y
@@ -11,19 +12,19 @@ SOURCES = edif.y
 all  :	e2net ppedif e2sch
 
 ppedif : ppedif.o
-	cc $(CFLAGS) ppedif.c -o ppedif
+	gcc $(CFLAGS) ppedif.c -o ppedif
 
 e2net :	ed.h eelibsl.h e2net.o edif.o savelib.o
-	cc $(CFLAGS) e2net.o edif.o savelib.o -o e2net -lm
+	gcc $(CFLAGS) e2net.o edif.o savelib.o -o e2net -lm
 
 e2sch :	ed.h eelibsl.h e2sch.o edif.o savelib.o
-	cc $(CFLAGS) e2sch.o edif.o savelib.o -o e2sch -lm
+	gcc $(CFLAGS) e2sch.o edif.o savelib.o -o e2sch -lm
 
 savelib : fctsys.h eelibsl.h savelib.o 
-	cc $(CFLAGS) -c savelib.c
+	gcc $(CFLAGS) -c savelib.c
 
 edif :	ed.h eelibsl.h edif.o 
-	cc $(CFLAGS) -c edif.c
+	gcc $(CFLAGS) -c edif.c
 
 // main.o : main.c
 edif.o : edif.c
