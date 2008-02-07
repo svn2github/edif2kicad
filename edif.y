@@ -22,8 +22,6 @@
 #include "ed.h"
 #include "eelibsl.h"
 
-
-// #define DEBUG
 #define SIZE_PIN_TEXT 60
 
 static FILE *Input = NULL;              /* input stream */
@@ -46,7 +44,7 @@ int savtext=0;    // debug - no text
 float a,b,c,d,e,f,k,h;
 int  Rot[2][2], x,y, tx, ty, ox=0, oy=0, stop;
 int IRot[2][2];
-int ViewTypeSch=0, SchHead=1, inst_pin_name_vis=1, inst_pin_num_vis=1;
+int portInst=0, SchHead=1, inst_pin_name_vis=1, inst_pin_num_vis=1;
 
 struct FigGrpStruct *pfg=NULL, *pfgHead=NULL;
 char 		cur_fg[20];
@@ -2295,7 +2293,7 @@ _Port :		PortNameDef
                     New->U.Pin.PinShape = NONE;		// NONE, DOT, CLOCK, SHORT
 		    New->U.Pin.PinType  = PIN_UNSPECIFIED;
 		    New->U.Pin.Orient   = 0;
-                    New->U.Pin.Flags    = 1;           	/* Pin InVisible */
+                    New->U.Pin.Flags    = 0;           	// Pin Visible no port property in OrCad Ver 10
                     New->U.Pin.SizeNum  = TextSize;
                     New->U.Pin.SizeName = TextSize;
 		    New->U.Pin.Num[0]='0'; New->U.Pin.Num[4]=0;
@@ -2488,7 +2486,8 @@ _PortImpl :	Name
 	  |	_PortImpl Comment
 	  ;
 
-PortInst :	PORTINSTANCE _PortInst PopC
+PortInst :	PORTINSTANCE {portInst =1;} _PortInst PopC
+		{portInst = 0;}
 	 ;
 
 _PortInst :	PortRef
@@ -2861,7 +2860,7 @@ _StrDisplay :	STR
 		 if(bug>2)fprintf(Error,"%5d _StrDisplay Disp: '%s' '%s' %d %d\n",
 					LineNumber, $1->s, $2->s, $2->p->x, $2->p->y); 
 
-		if(!SchHead){
+		if(!SchHead && !portInst){
 		    for( pfg=pfgHead ; pfg != NULL ; pfg=pfg->nxt ) {
 			if( !strcmp($2->s, pfg->Name))
 			    break;
@@ -3196,27 +3195,15 @@ ViewType :	VIEWTYPE _ViewType PopC
 	 ;
 
 _ViewType :	MASKLAYOUT
-		{ViewTypeSch = 0;}
 	  |	PCBLAYOUT
-		{ViewTypeSch = 0;}
 	  |	NETLIST
-		{ViewTypeSch = 0;}
 	  |	SCHEMATIC
-		{if(bug>2)fprintf(Error,"  _ViewType: SCHEMATIC\n");
-		 ViewTypeSch = 1;
-		}
 	  |	SYMBOLIC
-		{ViewTypeSch = 0;}
 	  |	BEHAVIOR
-		{ViewTypeSch = 0;}
 	  |	LOGICMODEL
-		{ViewTypeSch = 0;}
 	  |	DOCUMENT
-		{ViewTypeSch = 0;}
 	  |	GRAPHIC
-		{ViewTypeSch = 0;}
 	  |	STRANGER
-		{ViewTypeSch = 0;}
 	  ;
 
 Visible :	VISIBLE BooleanValue PopC
@@ -3278,7 +3265,7 @@ _Name     :	Ident
           |	_Name Display
 		{$$=$1; $$->p=$2->p; $$->nxt=$2;
 
-		if(!SchHead){
+		if(!SchHead && !portInst){
 		    // search for an ReName
 		    s = $1->s;
 		    for( LEptr=CurrentLib->Entries, stop=0 ; LEptr != NULL && !stop ; LEptr=LEptr->nxt )

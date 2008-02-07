@@ -1,5 +1,11 @@
 change_log.txt
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2008-Feb-7  fwb
+	1) OrCad version 10 doesn't xmit PIN_32_NUMBER_32_IS_32_VISIBLE
+	   so for now all pins are visable
+	2) Verion 10 uses portInstance to display PIN name/number but
+	the coordinates are messed and without 1) no pin hotspots are shown
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2008-Feb-6  fwb
 	improved text scaling
  	automatically compute pin lenght and orientation
