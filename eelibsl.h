@@ -15,6 +15,7 @@
 
 #define PART_NAME_LEN	25		/* Maximum length of part name. */
 #define PREFIX_NAME_LEN	5		/* Maximum length of prefix (IC, R, SW etc.). */
+#define FOOT_NAME_LEN	25		/* Maximum length of footprint name. */
 #define PIN_SEPERATOR	"\n"	/* See Pins in LibraryEntryStruct. */
 #define FILE_IDENT "EESchema-LIBRARY Version 2.0"  /* Must be at the lib file start. */
 #define PIN_WIDTH	100			   /* Width between 2 pins in internal units. */
@@ -176,12 +177,14 @@ typedef struct LibraryEntryStruct {
 							   = ALIAS pour struct LibraryAliasType */
 	char Name[PART_NAME_LEN + 1];			/* Part name. */
 	char Prefix[PREFIX_NAME_LEN + 1];		/* Prefix ( U, IC ... ) */
+	char Foot[FOOT_NAME_LEN + 1];		/* Footprint name. */
 	char * AliasList;				/* Pointeur sur la liste des ALIAS de ce composant */
-	int NamePosX, NamePosY, NameOrient,NameSize;
+	int NamePosX,   NamePosY,   NameOrient,   NameSize;
+	int FootPosX,   FootPosY,   FootOrient,   FootSize;
 	int PrefixPosX, PrefixPosY, PrefixOrient, PrefixSize;
 	int NumOfUnits;
 	int TextInside;
-	BooleanType DrawPinNum, DrawPinName, DrawName, DrawPrefix;
+	BooleanType DrawPinNum, DrawPinName, DrawName, DrawPrefix, DrawFoot;
 	LibraryFieldEntry *Fields;			/* Liste des Champs auxiliaires */
 	LibraryDrawEntryStruct *Drawings;		/* How to draw this part */
 	int BBoxMinX, BBoxMaxX, BBoxMinY, BBoxMaxY;	/* BBox around the part. */

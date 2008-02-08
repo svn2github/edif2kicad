@@ -5,6 +5,7 @@ change_log.txt
 	   so for now all pins are visable
 	2) Verion 10 uses portInstance to display PIN name/number but
 	the coordinates are messed and without 1) no pin hotspots are shown
+	3) added PCB_FOOTPRINT Instance property
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2008-Feb-6  fwb
 	improved text scaling

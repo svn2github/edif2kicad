@@ -112,12 +112,14 @@ int ox, oy;
 extern float scale;
 int fx, fy;
 
+  if(FileEESchema == NULL)
+     return;
   fx  = OFF + scale * (float) ox; fy  = OFF + scale * (float) oy;
   fprintf(FileEESchema,"Connection ~ %d %d\n", fx, fy);
 }
 
-OutInst(libsym, refdes, ox, oy, rx, ry, Rot)
-char *libsym, *refdes;
+OutInst(libsym, refdes, foot, ox, oy, rx, ry, Rot)
+char *libsym, *refdes, *foot;
 int ox, oy, rx, ry, Rot[2][2];
 {
 extern float scale;
@@ -129,6 +131,8 @@ U 1 1 2F5F7E5C
 P 5750 9550
 F 0    "U1" H 5900 9900 60  0000 C C
 F 1 "24C16" H 5950 9200 60  0000 C C
+F 2 "TO220" H 5950 9200 60  0000 C C
+                            ^ flags
         1    5750 9550
         1    0    0    -1
 $EndComp
@@ -147,6 +151,9 @@ if(refdes != NULL){
   fprintf(FileEESchema,"F 0 \"%s\" H %d %d %d 0001\n", refdes, frx, fry, TEXT_SIZE);
 }
   fprintf(FileEESchema,"F 1 \"%s\" H %d %d %d 0001\n", libsym, fx, fy+50, TEXT_SIZE);
+if(foot != NULL && foot[0] != 0) {
+  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001\n", foot, fx, fy+50, TEXT_SIZE);
+}
   fprintf(FileEESchema,"  1 %d %d\n", fx, fy);
   fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0][0], Rot[0][1], Rot[1][0], Rot[1][1]);
   fprintf(FileEESchema,"$EndComp\n");

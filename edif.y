@@ -589,14 +589,14 @@ CellNameDef :	NameDef
 		if(bug>4)fprintf(Error,"New ROOT LibraryEntryStruct\n");
   		LibEntry = (LibraryEntryStruct *) Malloc(sizeof(LibraryEntryStruct));
   		LibEntry->Type = ROOT;
-  		LibEntry->PrefixSize =  DEFAULT_SIZE_TEXT;
-                LibEntry->PrefixPosX = 0; LibEntry->PrefixPosY = 0;
-  		LibEntry->NamePosX   = 0;
-  		LibEntry->NamePosY   = 0;
-  		LibEntry->NameSize =  DEFAULT_SIZE_TEXT;
+                LibEntry->PrefixPosX = 0; LibEntry->PrefixPosY = 0; LibEntry->PrefixSize =  DEFAULT_SIZE_TEXT;
+  		LibEntry->NamePosX   = 0; LibEntry->NamePosY   = 0; LibEntry->NameSize   =  DEFAULT_SIZE_TEXT;
+  		LibEntry->FootPosX   = 0; LibEntry->FootPosY   = 0; LibEntry->FootSize   =  DEFAULT_SIZE_TEXT;
   		LibEntry->Prefix[0] = 'U';
   		LibEntry->Prefix[1] = 0; 
                 LibEntry->DrawPinNum = 1; LibEntry->DrawPinName = 1; LibEntry->DrawName = 1; LibEntry->DrawPrefix = 1;
+		LibEntry->DrawFoot = 0;
+  		LibEntry->Foot[0] = 0;
   		LibEntry->TextInside = 30;
   		LibEntry->NumOfUnits = 1;
   		LibEntry->Fields = NULL;
@@ -1338,6 +1338,7 @@ InstNameDef :	NameDef
 		ref=val=NULL;
 		tx=ty=0;
 		inst_pin_name_vis=1, inst_pin_num_vis=1;
+		LibEntry->Foot[0] = 0;
 		}
 	    |	Array
 	    ;
@@ -1360,12 +1361,12 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 		       if(bug>2)fprintf(Error,"  Out:Inst '%s' '%s' %d %d:%d %d %d %d\n", 
 				val->s, s, tx, ty, IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
 		       strncpy(maxs, val->s, PART_NAME_LEN);
-		       OutInst(maxs, $2->s,  tx, -ty, tx,       -ty, IRot);
+		       OutInst(maxs, $2->s,  LibEntry->Foot, tx, -ty, tx,       -ty, IRot); 
 		   }else{
 		       if(bug>2)fprintf(Error,"  Out:Inst '%s' '%s' %d %d:%d %d %d %d \n", 
 				val->s, ref->s, tx, ty, IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
 		       strncpy(maxs, val->s, PART_NAME_LEN);
-		       OutInst(maxs, ref->s, tx, -ty, ref->p->x, -ref->p->y, IRot);
+		       OutInst(maxs, ref->s, LibEntry->Foot, tx, -ty, ref->p->x, -ref->p->y, IRot);
 	           }
 		}
 		New = NULL;
@@ -1390,12 +1391,14 @@ _Instance :	ViewRef
 		{ref = $2;}
 	  |	_Instance Property
 		{if(bug>3)fprintf(Error,"  _Instance Property: '%s'='%s'\n", $2->s, $2->nxt->s);
-#ifdef LATER
 		if( !strcmp($2->s, "PIN_NAMES_VISIBLE")  && !strcmp($2->nxt->s,"false"))
 		   inst_pin_name_vis=0; 
+
 		if( !strcmp($2->s, "PIN_NUMBERS_VISIBLE")&& !strcmp($2->nxt->s,"false"))
 		   inst_pin_num_vis=0; 
-#endif
+
+		if( !strcmp($2->s, "PCB_FOOTPRINT") )
+		   strncpy(LibEntry->Foot, $2->nxt->s, FOOT_NAME_LEN);  // fwb
 		}
 	  |	_Instance Comment
 	  |	_Instance UserData
@@ -2632,7 +2635,6 @@ Property  :	PROPERTY PropNameDef _Property PopC
 			New->U.Pin.SizeNum  = TextSize;
 			New->U.Pin.SizeName = TextSize;
 			New->U.Pin.ReName = NULL;
-			// New->U.Pin.Name   = (char *)strndup(LibEntry->Name, 3);
 			New->U.Pin.Name   = (char *) &LibEntry->Name;
 			// New->U.Pin.Name      = NULL;
 			strcpy(New->U.Pin.Num, "1");
