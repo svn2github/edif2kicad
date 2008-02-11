@@ -72,8 +72,8 @@ OutHead(LibraryStruct * Libs)
   fflush(FileEESchema);
 }
 
-#define OFF 500
-// #define OFF 0
+// #define OFF 500
+#define OFF 0
 OutText(g,s,x,y,size)
 char *s;
 int   g, x,y;
@@ -118,9 +118,9 @@ int fx, fy;
   fprintf(FileEESchema,"Connection ~ %d %d\n", fx, fy);
 }
 
-OutInst(libsym, refdes, foot, ox, oy, rx, ry, Rot)
-char *libsym, *refdes, *foot;
-int ox, oy, rx, ry, Rot[2][2];
+OutInst(reflib, refdes, value, foot, ox, oy, rx, ry, vx, vy, Rot)
+char *reflib, *refdes, *value, *foot;
+int ox, oy, rx, ry, vx, vy, Rot[2][2];
 {
 extern float scale;
 
@@ -137,22 +137,25 @@ F 2 "TO220" H 5950 9200 60  0000 C C
         1    0    0    -1
 $EndComp
 */
-int fx, fy, frx, fry;
+int fx, fy, frx, fry, fvx, fvy;
 
   fx  = OFF + scale * (float) ox; fy  = OFF + scale * (float) oy;
   frx = OFF + scale * (float) rx; fry = OFF + scale * (float) ry;
+  fvx = OFF + scale * (float) vx; fvy = OFF + scale * (float) vy;
   if(FileEESchema == NULL)
      return;
   fprintf(FileEESchema, "$Comp\n");
-  fprintf(FileEESchema,"L %s %s\n", libsym, refdes );
+  fprintf(FileEESchema,"L %s %s\n", reflib, refdes );
   fprintf(FileEESchema,"U %d %d %8.8lX\n", 1, 1, 0l);
   fprintf(FileEESchema,"P %d %d\n", fx, fy);
 if(refdes != NULL){
-  fprintf(FileEESchema,"F 0 \"%s\" H %d %d %d 0001\n", refdes, frx, fry, TEXT_SIZE);
+  fprintf(FileEESchema,"F 0 \"%s\" H %d %d %d 0000 \n", refdes, frx, fry, TEXT_SIZE);
 }
-  fprintf(FileEESchema,"F 1 \"%s\" H %d %d %d 0001\n", libsym, fx, fy+50, TEXT_SIZE);
+if(value != NULL){
+  fprintf(FileEESchema,"F 1 \"%s\" H %d %d %d 0000 \n", value, fvx, fvy, TEXT_SIZE);
+}
 if(foot != NULL && foot[0] != 0) {
-  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001\n", foot, fx, fy+50, TEXT_SIZE);
+  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001 \n", foot, fx, fy+50, TEXT_SIZE);
 }
   fprintf(FileEESchema,"  1 %d %d\n", fx, fy);
   fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0][0], Rot[0][1], Rot[1][0], Rot[1][1]);

@@ -1,5 +1,8 @@
 change_log.txt
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2008-Feb-10 fwb
+ 	Improved Instance reference, value positions
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2008-Feb-7  fwb
 	1) OrCad version 10 doesn't xmit PIN_32_NUMBER_32_IS_32_VISIBLE
 	   so for now all pins are visable

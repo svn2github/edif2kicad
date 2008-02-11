@@ -37,14 +37,15 @@ LibraryDrawEntryStruct   *New=NULL, *INew, *LDptr;
 int  		 num, *Poly, TextSize=SIZE_PIN_TEXT;
 char 		*bad="BBBB", *s, fname[30], **eptr, maxs[PART_NAME_LEN+1];
 char		*cur_pnam ;
-struct plst 	*pl;
-struct st	*stp, *ref, *val;
+struct plst 	*pl, zplst = {0,0,NULL};
+struct st	*stp, *ref, *val, refI, valI;
+char  		*reflib;
 int convert=1;	  // normal
 int savtext=0;    // debug - no text
 float a,b,c,d,e,f,k,h;
 int  Rot[2][2], x,y, tx, ty, ox=0, oy=0, stop;
 int IRot[2][2];
-int portInst=0, SchHead=1, inst_pin_name_vis=1, inst_pin_num_vis=1;
+int InInstance=0, SchHead=1, inst_pin_name_vis=1, inst_pin_num_vis=1;
 
 struct FigGrpStruct *pfg=NULL, *pfgHead=NULL;
 char 		cur_fg[20];
@@ -634,7 +635,7 @@ CellRef     :	CELLREF CellNameRef _CellRef PopC
 		    if(bug>4)fprintf(Error,"New LibraryDrawEntryStruct\n");
 		    LibEntry = &InstLibEntry; // fwb if needed
 #endif
-		val = $2;
+		reflib = $2->s;
 		}
 	    ;
 
@@ -1335,10 +1336,13 @@ InstNameDef :	NameDef
 		    if(bug>2)fprintf(Error,"  Out:Head'%s' \n", Libs->Name);
 		    OutHead(Libs); OutPro(Libs); SchHead=0;
 		}
-		ref=val=NULL;
+		reflib=NULL; 
+		val = &valI; val->s = NULL; val->p = &zplst;
+		ref = &refI; ref->s = NULL; ref->p = &zplst;
 		tx=ty=0;
 		inst_pin_name_vis=1, inst_pin_num_vis=1;
 		LibEntry->Foot[0] = 0;
+		InInstance =1;
 		}
 	    |	Array
 	    ;
@@ -1346,30 +1350,19 @@ InstNameDef :	NameDef
 Instance :	INSTANCE InstNameDef _Instance PopC
 		{
 		$$=$2; 
-		if(bug>2 && val->s != NULL)fprintf(Error,"  INSTANCE:%s '%s' \n", $2->s, val->s );
-		if(bug>2 && val->s == NULL)fprintf(Error,"  INSTANCE:%s '' \n", $2->s );
+		if(bug>2)fprintf(Error,"  INSTANCE:%s '%s' '%s' '%s' \n", $2->s, reflib, ref->s, val->s );
 
-		if( val != NULL ){
-		   if(strstr(val->s, "JUNCTION")!=NULL ||
-		      strstr(val->s, "XTIE")){
+		if( (val->s != NULL) && (strstr(val->s, "JUNCTION")!=NULL || strstr(val->s, "XTIE")) ){
 	  	      if(bug>2)fprintf(Error,"  Out:Conn '%s' %d %d \n", val->s, tx, ty);
 		      OutConn( tx, -ty);
-		   }
-		   else if(ref == NULL) {
-		       s=(char *)Malloc(strlen($2->s)+1); 
-		       s[0]='#'; s[1]=0; s=strcat(s,$2->s);
-		       if(bug>2)fprintf(Error,"  Out:Inst '%s' '%s' %d %d:%d %d %d %d\n", 
-				val->s, s, tx, ty, IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
-		       strncpy(maxs, val->s, PART_NAME_LEN);
-		       OutInst(maxs, $2->s,  LibEntry->Foot, tx, -ty, tx,       -ty, IRot); 
-		   }else{
-		       if(bug>2)fprintf(Error,"  Out:Inst '%s' '%s' %d %d:%d %d %d %d \n", 
-				val->s, ref->s, tx, ty, IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
-		       strncpy(maxs, val->s, PART_NAME_LEN);
-		       OutInst(maxs, ref->s, LibEntry->Foot, tx, -ty, ref->p->x, -ref->p->y, IRot);
-	           }
-		}
+		} else {
+		      if(bug>2)fprintf(Error,"  Out:Inst '%s' '%s' '%s' '%s' %d,%d %d,%d %d,%d [%d %d %d %d]\n", 
+		       reflib, ref->s, val->s, LibEntry->Foot, tx, -ty, ref->p->x, -ref->p->y, val->p->x, -val->p->y, 
+		       IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
+		      OutInst(reflib, ref->s, val->s, LibEntry->Foot, tx, -ty, ref->p->x, -ref->p->y, val->p->x, -val->p->y, IRot);
+	        }
 		New = NULL;
+		InInstance = 0;
 		}
 	 ;
 
@@ -1377,6 +1370,8 @@ _Instance :	ViewRef
 	  |	ViewList
 	  |	_Instance Transform
 		{ 
+		  tx=$2->p->x; ty=$2->p->y; 
+
 		  if( $2->n != PIN_N ){
 		      IRot[0][0] = Rot[0][0]; IRot[0][1] = Rot[0][1];
 		      IRot[1][0] = Rot[1][0]; IRot[1][1] = Rot[1][1];
@@ -2489,8 +2484,7 @@ _PortImpl :	Name
 	  |	_PortImpl Comment
 	  ;
 
-PortInst :	PORTINSTANCE {portInst =1;} _PortInst PopC
-		{portInst = 0;}
+PortInst :	PORTINSTANCE _PortInst PopC
 	 ;
 
 _PortInst :	PortRef
@@ -2846,6 +2840,8 @@ StrDisplay :	STRINGDISPLAY _StrDisplay PopC
 
 		    if(savtext && New!=NULL){
 		    New->U.Text.Text = $2->s;
+		    New->U.Text.x = $2->p->x;
+		    New->U.Text.y = $2->p->y;
                     if( New->U.Text.Text == NULL )
                         New->U.Text.Text = strdup("SSSS");
                     New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
@@ -2859,10 +2855,15 @@ _StrDisplay :	STR
 		}
 	    |	_StrDisplay Display
 		{$$=$1; $$->p=$2->p; $1->nxt=$2;
-		 if(bug>2)fprintf(Error,"%5d _StrDisplay Disp: '%s' '%s' %d %d\n",
-					LineNumber, $1->s, $2->s, $2->p->x, $2->p->y); 
+		 if(bug>2)fprintf(Error,"%5d _StrDisplay Disp: '%s' '%s' %d %d %s\n",
+				LineNumber, $1->s, $2->s, $2->p->x, $2->p->y, InInstance?"InInst":"!InInst"); 
 
-		if(!SchHead && !portInst){
+		if(InInstance && !strcmp($2->s, "PARTREFERENCE"))
+		    ref=$1;
+		if(InInstance && !strcmp($2->s, "PARTVALUE"))
+		    val=$1;
+
+		if(!SchHead && !InInstance){
 		    for( pfg=pfgHead ; pfg != NULL ; pfg=pfg->nxt ) {
 			if( !strcmp($2->s, pfg->Name))
 			    break;
@@ -3007,9 +3008,9 @@ _Timing :	Derivation
 Transform :	TRANSFORM _TransX _TransY _TransDelta _TransOrien _TransOrg PopC
 		{
 		$$->n=$5;
+		$$->p=$6;
 		INew = New;	// Instance position
 		if(bug>2)fprintf(Error,"%5d  Transform: %c %d %d\n", LineNumber, $5, $6->x, $6->y);
-		tx=$6->x; ty=$6->y; 
 		}
 	  ;
 
@@ -3267,7 +3268,7 @@ _Name     :	Ident
           |	_Name Display
 		{$$=$1; $$->p=$2->p; $$->nxt=$2;
 
-		if(!SchHead && !portInst){
+		if(!SchHead && !InInstance){
 		    // search for an ReName
 		    s = $1->s;
 		    for( LEptr=CurrentLib->Entries, stop=0 ; LEptr != NULL && !stop ; LEptr=LEptr->nxt )

@@ -7,7 +7,7 @@
 #include "ed.h"
 #include "eelibsl.h"
 
-int bug=0;  		// debug level: 
+int bug=4;  		// debug level: 
 int yydebug=0;
 
 char *InFile = "-";
