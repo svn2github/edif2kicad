@@ -7,18 +7,19 @@
 #include "ed.h"
 #include "eelibsl.h"
 
-int bug=4;  		// debug level: 
+int bug=0;  		// debug level: 
 int yydebug=0;
 
 char *InFile = "-";
 
 char  FileNameNet[64], FileNameLib[64], FileNameEESchema[64], FileNameKiPro[64];
-FILE * FileEdf, * FileNet, * FileEESchema, * FileLib=NULL, * FileKiPro=NULL;
+FILE *FileEdf, *FileNet, *FileEESchema=NULL, *FileLib=NULL, *FileKiPro=NULL;
 
-global char                      *cur_nnam=NULL;
 global struct inst               *insts=NULL, *iptr=NULL;
 global struct con                *cons=NULL,  *cptr=NULL;
+global int pass2=0;
 global float scale;
+global char  efName[50];
 
 main(int argc, char *argv[])
 {
@@ -43,23 +44,9 @@ main(int argc, char *argv[])
        return(-1);
   }
 
-  sprintf(FileNameEESchema,"%s.sch",argv[1]);
-  if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
-       fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
-       return(-1);
-  }
-
-  sprintf(FileNameKiPro,"%s.pro",argv[1]);
-  if( (FileKiPro = fopen( FileNameKiPro, "wt" )) == NULL ) {
-       fprintf(stderr, " %s impossible a creer\n", FileNameKiPro);
-       return(-1);
-  }
-
   Libs=NULL;
   fprintf(stderr, "Parsing %s\n", InFile);
   ParseEDIF(FileEdf, stderr);
-  fprintf(FileEESchema,"$EndSCHEMATC\n");
-  fclose(FileEESchema);
 
   fprintf(stderr, "Writting Libs \n");
   for( ; Libs != NULL; Libs = Libs->nxt ){
@@ -72,6 +59,9 @@ main(int argc, char *argv[])
         SaveActiveLibrary(FileLib, Libs );
         fclose(FileLib);
   }
+
+  pass2++;
+  freopen(InFile, "rt", FileEdf);
 
   fprintf(stderr, " BonJour\n");
   return(0);

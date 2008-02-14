@@ -5,7 +5,7 @@
 # CFLAGS = -DDEBUG
 # CFLAGS = -O
 CC	   = gcc
-CFLAGS = -g
+CFLAGS = -g -static
 
 SOURCES = edif.y
 

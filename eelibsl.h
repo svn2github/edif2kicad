@@ -198,10 +198,11 @@ typedef struct LibraryStruct {
 	struct LibraryStruct *nxt;		/* Point on next lib in chain. */
 } LibraryStruct;
 
-global LibraryStruct          	*Libs,  *CurrentLib, *LSptr;
+global LibraryStruct          	*Libs,  *CurrentLib, *DesignName, *LSptr;
 global LibraryEntryStruct 	*LibEntry, *LEptr;
 global LibraryDrawEntryStruct 	*Drawing, *LDptr;
 global LibraryFieldEntry	*InsEntry;
+global char 			 efName[50];
 
 #endif // EELIBSL_H
 

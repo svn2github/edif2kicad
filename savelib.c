@@ -11,10 +11,14 @@ FILE * FileEdf, * FileNet, * FileEESchema, * FileKiPro ;
 
 OutPro(LibraryStruct * Libs)
 {
+  extern char FileNameKiPro[];
   int i;
 
-  if(FileKiPro == NULL)
-     return;
+  sprintf(FileNameKiPro,"%s.pro", efName);
+  if( (FileKiPro = fopen( FileNameKiPro, "wt" )) == NULL ) {
+       fprintf(stderr, " %s impossible a creer\n", FileNameKiPro);
+       return(-1);
+  }
   fprintf(FileKiPro,"update=16/11/2007-20:11:59\n");
   fprintf(FileKiPro,"last_client=eeschema\n");
   fprintf(FileKiPro,"[eeschema]\n");
@@ -47,10 +51,18 @@ OutPro(LibraryStruct * Libs)
   }
 }
 
-OutHead(LibraryStruct * Libs)
+OutHead(char *InFile, LibraryStruct *Libs)
 {
-  if(FileEESchema == NULL)
-     return;
+  extern char FileNameEESchema[];
+
+  fprintf(stderr, "OutHead EdifFileName %s\n", efName);
+
+  sprintf(FileNameEESchema,"%s.sch", efName);
+  if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
+       fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
+       return(-1);
+  }
+
   fprintf(FileEESchema,"EESchema Schematic File Version 1\n");
   fprintf(FileEESchema,"LIBS:");
   for( ; Libs != NULL; Libs = Libs->nxt ){
@@ -72,8 +84,14 @@ OutHead(LibraryStruct * Libs)
   fflush(FileEESchema);
 }
 
-// #define OFF 500
-#define OFF 0
+OutEnd()
+{
+  fprintf(FileEESchema,"$EndSCHEMATC\n");
+  fclose(FileEESchema);
+}
+
+#define OFF 500
+// #define OFF 0
 OutText(g,s,x,y,size)
 char *s;
 int   g, x,y;
@@ -142,6 +160,7 @@ int fx, fy, frx, fry, fvx, fvy;
   fx  = OFF + scale * (float) ox; fy  = OFF + scale * (float) oy;
   frx = OFF + scale * (float) rx; fry = OFF + scale * (float) ry;
   fvx = OFF + scale * (float) vx; fvy = OFF + scale * (float) vy;
+
   if(FileEESchema == NULL)
      return;
   fprintf(FileEESchema, "$Comp\n");
@@ -149,13 +168,13 @@ int fx, fy, frx, fry, fvx, fvy;
   fprintf(FileEESchema,"U %d %d %8.8lX\n", 1, 1, 0l);
   fprintf(FileEESchema,"P %d %d\n", fx, fy);
 if(refdes != NULL){
-  fprintf(FileEESchema,"F 0 \"%s\" H %d %d %d 0000 \n", refdes, frx, fry, TEXT_SIZE);
+  fprintf(FileEESchema,"F 0 \"%s\" %c %d %d %d 0000 \n", refdes, Rot[0][1]?'V':'H',frx, fry, TEXT_SIZE);
 }
 if(value != NULL){
-  fprintf(FileEESchema,"F 1 \"%s\" H %d %d %d 0000 \n", value, fvx, fvy, TEXT_SIZE);
+  fprintf(FileEESchema,"F 1 \"%s\" %c %d %d %d 0000 \n", value,  Rot[0][1]?'V':'H',fvx,  fvy, TEXT_SIZE);
 }
 if(foot != NULL && foot[0] != 0) {
-  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001 \n", foot, fx, fy+50, TEXT_SIZE);
+  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001 \n", foot, fx+50, fy+50, TEXT_SIZE);
 }
   fprintf(FileEESchema,"  1 %d %d\n", fx, fy);
   fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0][0], Rot[0][1], Rot[1][0], Rot[1][1]);

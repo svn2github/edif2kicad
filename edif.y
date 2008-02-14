@@ -30,12 +30,14 @@ static int   LineNumber;                /* current input line number */
 
 global struct inst *insts, *iptr; 
 global struct con  *cons,  *cptr;
+global int    pass2;
 global float  scale;
+global char   efName[50];
 
 LibraryEntryStruct	 *LEptr, InstLibEntry;
 LibraryDrawEntryStruct   *New=NULL, *INew, *LDptr;
 int  		 num, *Poly, TextSize=SIZE_PIN_TEXT;
-char 		*bad="BBBB", *s, fname[30], **eptr, maxs[PART_NAME_LEN+1];
+char 		*bad="BBBB", *s, fname[30], **eptr;
 char		*cur_pnam ;
 struct plst 	*pl, zplst = {0,0,NULL};
 struct st	*stp, *ref, *val, refI, valI;
@@ -401,7 +403,9 @@ PopC :		')' { PopC(); }
      ;
 
 EdifFileName :	NameDef
-		{if(bug>2);fprintf(Error,"EdifFileName: %s\n", $1->s);}
+		{if(bug>5);fprintf(Error,"EdifFileName: %s\n", $1->s);
+		    strncpy( efName, $1->s, 50);
+		}
 	     ;
 
 Edif  :		EDIF EdifFileName EdifVersion EdifLevel KeywordMap _Edif PopC
@@ -442,20 +446,28 @@ _After :	MiNoMaValue
        ;
 
 Annotate :	ANNOTATE _Annotate PopC
-		{$$=$2; if(bug>4)fprintf(Error,"  Annotate: %s %d %d\n",$2->s, $2->p->x, $2->p->y);
+		{$$=$2; if(bug>4)fprintf(Error,"  Annotate: '%s' %d %d oy=$d\n",$2->s, $2->p->x, $2->p->y,oy);
 
-		if(savtext && New!=NULL){
-		    New->U.Text.Text = $2->s;
-                    if( New->U.Text.Text == NULL )
-                        New->U.Text.Text = strdup("AAAA");
-                    New->U.Text.x += (New->U.Text.size * strlen(New->U.Text.Text))/2;
-                    New->U.Text.y += New->U.Text.size / 2;
-		}
+		 New->U.Text.Text = $2->s;
+                 New->U.Text.size = TextSize;
+                 New->U.Text.x = $2->p->x + ox +(New->U.Text.size * (strlen(New->U.Text.Text)+1)/2);
+                 New->U.Text.y = $2->p->y - oy; 
 		}
 	 ;
 
 _Annotate :	STR
+		{$$=NULL;}
 	  |	StrDisplay
+		{if(bug>4)fprintf(Error,"   _Annotate StrDisp:'%s' %d %d oy=%d\n",$1->s, $1->p->x, $1->p->y,oy);
+		 if(bug>4)fprintf(Error,"New TEXT_DRAW_TYPE LibraryDrawEntryStruct\n");
+		 New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                 New->DrawType = TEXT_DRAW_TYPE; New->Convert = convert;
+
+                 New->nxt = LibEntry->Drawings;
+                 LibEntry->Drawings = New;
+                 New->Unit = 0;
+		 New->U.Text.Horiz = 0;
+		}
 	  ;
 
 Apply :		APPLY _Apply PopC
@@ -691,7 +703,7 @@ Color :		COLOR ScaledInt ScaledInt ScaledInt PopC
       ;
 
 Comment :	COMMENT _Comment PopC
-		{$$=$2; if(bug>5)fprintf(Error,"   Comment: %s\n",$2->s);}
+		{$$=$2; if(bug>4)fprintf(Error,"   Comment: %s\n",$2->s);}
 	;
 
 _Comment :	Str
@@ -850,6 +862,8 @@ Design 	    :	DESIGN DesignNameDef _Design PopC
 		if(bug>0 && $3 != NULL)fprintf(Error,"Design: '%s' '%s'\n\n", $2->s, $3->s); 
 		if(bug>0 && $3 == NULL)fprintf(Error,"Design: '%s' ''  \n\n", $2->s); 
 	
+		DesignName = CurrentLib;
+		OutEnd();
 		// fwb
 		// strcpy(CurrentLib->Name, "DESIGN");
 		// CurrentLib->NumOfParts = 0; // fixme - previous Lib was DESIGN
@@ -944,6 +958,13 @@ Display     :	DISPLAY _Display _DisplayJust _DisplayOrien _DisplayOrg PopC
    	    ;
 
 FigGrpNameRef :	NameRef
+		{
+		for( pfg=pfgHead ; pfg != NULL ; pfg=pfg->nxt )
+                     if( !strcmp($1->s, pfg->Name) )
+                        break;
+		if( pfg != NULL )
+		     TextSize = pfg->TextHeight;
+		}
 	      ;
 
 _Display      :	FigGrpNameRef
@@ -1064,7 +1085,8 @@ FigGrp  :	FIGUREGROUP _FigGrp PopC
         ;
 
 _FigGrp :	FigGrpNameDef
-		{$$->p=NULL; if(bug>2)fprintf(Error,"%5d _FigGrp: FigGrpNameDef cur_fg:%s\n", LineNumber, $1->s); 
+		{$$->p=NULL; 
+		 if(bug>2)fprintf(Error,"%5d _FigGrp: FigGrpNameDef cur_fg:%s\n", LineNumber, $1->s); 
 		 strncpy(cur_fg, $1->s, 20);
 		 for( pfg=pfgHead ; pfg != NULL ; pfg=pfg->nxt )
 		     if( !strcmp($1->s, pfg->Name) )
@@ -1237,6 +1259,19 @@ _Figure :	FigGrpNameDef
 		}
 	|	_Figure Shape
 	|	_Figure Comment
+		{
+		    if(bug>4)fprintf(Error,"New TEXT LibraryDrawEntryStruct\n");
+		    New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
+                    New->DrawType = TEXT_DRAW_TYPE; New->Convert = convert;
+
+                    New->nxt = LibEntry->Drawings;
+                    LibEntry->Drawings = New;
+                    New->Unit = 0;
+		    New->U.Text.Horiz = 0;
+                    New->U.Text.size = TextSize;
+                    New->U.Text.type = 0;
+		    New->U.Text.Text = bad;		// fixme
+		}
 	|	_Figure UserData
 	;
 
@@ -1333,13 +1368,13 @@ InstNameDef :	NameDef
 		{
 		if(bug>2)fprintf(Error,"\n%5d InstNameDef: '%s'\n", LineNumber, $1->s); 
 		if( SchHead ){
-		    if(bug>2)fprintf(Error,"  Out:Head'%s' \n", Libs->Name);
-		    OutHead(Libs); OutPro(Libs); SchHead=0;
+		    if(bug>2)fprintf(Error,"  OutHead'%s' \n", Libs->Name);
+		    OutHead($1->s, Libs); OutPro(Libs); SchHead=0;
 		}
 		reflib=NULL; 
 		val = &valI; val->s = NULL; val->p = &zplst;
 		ref = &refI; ref->s = NULL; ref->p = &zplst;
-		tx=ty=0;
+		tx=ty=ox=oy=0;
 		inst_pin_name_vis=1, inst_pin_num_vis=1;
 		LibEntry->Foot[0] = 0;
 		InInstance =1;
@@ -1349,17 +1384,20 @@ InstNameDef :	NameDef
 
 Instance :	INSTANCE InstNameDef _Instance PopC
 		{
-		$$=$2; 
-		if(bug>2)fprintf(Error,"  INSTANCE:%s '%s' '%s' '%s' \n", $2->s, reflib, ref->s, val->s );
+		$$=$2; // ox=oy=0; 
+		if(bug>2)fprintf(Error,"  INSTANCE:%s '%s' '%s' '%s' oy=%d \n", $2->s, reflib, ref->s, val->s, oy);
 
-		if( (val->s != NULL) && (strstr(val->s, "JUNCTION")!=NULL || strstr(val->s, "XTIE")) ){
-	  	      if(bug>2)fprintf(Error,"  Out:Conn '%s' %d %d \n", val->s, tx, ty);
+		if( (val->s == NULL) && (strstr($2->s, "JUNCTION")!=NULL || strstr($2->s, "TIE")!=NULL) ){
+	  	      if(bug>2)fprintf(Error,"  OutConn '%s' %d %d \n", $2->s, tx, ty);
 		      OutConn( tx, -ty);
 		} else {
-		      if(bug>2)fprintf(Error,"  Out:Inst '%s' '%s' '%s' '%s' %d,%d %d,%d %d,%d [%d %d %d %d]\n", 
-		       reflib, ref->s, val->s, LibEntry->Foot, tx, -ty, ref->p->x, -ref->p->y, val->p->x, -val->p->y, 
+		      if(bug>2)fprintf(Error,"  OutInst '%s' '%s' '%s' '%s' %d,%d %d,%d %d,%d [%d %d %d %d]\n", 
+		       reflib, ref->s, val->s, LibEntry->Foot, tx, -ty, 
+			ox+ref->p->x, -oy-ref->p->y, ox+val->p->x, -oy-val->p->y, 
 		       IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
-		      OutInst(reflib, ref->s, val->s, LibEntry->Foot, tx, -ty, ref->p->x, -ref->p->y, val->p->x, -val->p->y, IRot);
+		      OutInst(reflib, ref->s, val->s, LibEntry->Foot, tx, -ty, 
+			ox+sizeof(ref->s)*25+ref->p->x, -oy-ref->p->y, 
+			ox+sizeof(val->s)*25+val->p->x, -oy-val->p->y, IRot);
 	        }
 		New = NULL;
 		InInstance = 0;
@@ -1370,7 +1408,7 @@ _Instance :	ViewRef
 	  |	ViewList
 	  |	_Instance Transform
 		{ 
-		  tx=$2->p->x; ty=$2->p->y; 
+		  // see ^Transform tx=$2->p->x; ty=$2->p->y; 
 
 		  if( $2->n != PIN_N ){
 		      IRot[0][0] = Rot[0][0]; IRot[0][1] = Rot[0][1];
@@ -1393,7 +1431,7 @@ _Instance :	ViewRef
 		   inst_pin_num_vis=0; 
 
 		if( !strcmp($2->s, "PCB_FOOTPRINT") )
-		   strncpy(LibEntry->Foot, $2->nxt->s, FOOT_NAME_LEN);  // fwb
+		   strncpy(LibEntry->Foot, $2->nxt->s, FOOT_NAME_LEN);  
 		}
 	  |	_Instance Comment
 	  |	_Instance UserData
@@ -2081,10 +2119,11 @@ Origin       :	ORIGIN PointValue PopC
 		    if(bug>4)fprintf(Error,"New TEXT_DRAW_TYPE LibraryDrawEntryStruct\n");
                     New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
                     New->DrawType = TEXT_DRAW_TYPE; New->Convert = convert;
+
                     New->nxt = LibEntry->Drawings;
                     LibEntry->Drawings = New;
                     New->Unit = 0;
-		    New->U.Text.Horiz =1; 
+		    New->U.Text.Horiz =0; 
                     New->U.Text.x = (int)( $2->x * 1 ) ;
                     New->U.Text.y = (int)( $2->y * 1 );
                     New->U.Text.size = TextSize;
@@ -2165,7 +2204,7 @@ Path :		PATH _Path PopC
 		{$$=$2;
 		    if(!SchHead){
 			for( pl=$2 ; pl->nxt != NULL ; pl=pl->nxt ){
-	            	    if(bug>2)fprintf(Error,"  Out:Wire  %d %d %d %d\n", 
+	            	    if(bug>2)fprintf(Error,"  OutWire  %d %d %d %d\n", 
 			        pl->x, -pl->y, pl->nxt->x, -pl->nxt->y);
 		    	    OutWire(pl->x, -pl->y, pl->nxt->x, -pl->nxt->y);
 			}
@@ -2838,7 +2877,7 @@ _Steady :	Duration
 StrDisplay :	STRINGDISPLAY _StrDisplay PopC
 		{$$=$2;
 
-		    if(savtext && New!=NULL){
+		    if(savtext && New!=NULL){ 
 		    New->U.Text.Text = $2->s;
 		    New->U.Text.x = $2->p->x;
 		    New->U.Text.y = $2->p->y;
@@ -2877,7 +2916,7 @@ _StrDisplay :	STR
 
 		    s = $1->s;
 		    if(inst_pin_num_vis==1 || inst_pin_name_vis==1){
-	                if(bug>2)fprintf(Error,"  Out:Text D '%s' %d %d %d\n", 
+	                if(bug>2)fprintf(Error,"  OutText D '%s' %d %d %d\n", 
 					s, $2->p->x +ox, $2->p->y +oy, TextSize);
 	    	        OutText(0, s, $2->p->x +ox, -$2->p->y +oy, TextSize); 
 		    }
@@ -2917,7 +2956,7 @@ _Symbol :
 		{ $$=$2; if(bug>4)fprintf(Error,"  _Sym Instance '%s'\n", $2->s); }
 	|	_Symbol CommGraph
 	|	_Symbol Annotate
-		{ $$=$2; if(bug>4)fprintf(Error,"  _Sym Annot '%s'\n", $2->s); }
+		{ $$=$2; if(bug>4)fprintf(Error,"  _Sym Annotate '%s'\n", $2->s); }
 	|	_Symbol PageSize
 	|	_Symbol BoundBox
 	|	_Symbol PropDisp
@@ -2976,7 +3015,7 @@ _Technology :	NumberDefn
 
 TextHeight :	TEXTHEIGHT Int PopC
 		{$$=$2; TextSize = $2;
-		 if(bug>4)fprintf(Error,"TextHeight %d\n", $2);
+		 if(bug>4)fprintf(Error," TextHeight %d\n", $2);
 		}
 	   ;
 
@@ -3011,6 +3050,8 @@ Transform :	TRANSFORM _TransX _TransY _TransDelta _TransOrien _TransOrg PopC
 		$$->p=$6;
 		INew = New;	// Instance position
 		if(bug>2)fprintf(Error,"%5d  Transform: %c %d %d\n", LineNumber, $5, $6->x, $6->y);
+		
+		tx=$6->x; ty=$6->y; // fwb
 		}
 	  ;
 
@@ -3288,10 +3329,10 @@ _Name     :	Ident
 		    // Global Label or Normal
 		    if(inst_pin_num_vis==1 || inst_pin_name_vis==1){
 		        if( !strcmp($1->nxt->s, "OFFPAGECONNECTOR")) {
-		            if(bug>2)fprintf(Error," Out:Text G '%s' %d %d %d\n", s, $2->p->x +ox, $2->p->y +oy, TextSize);
+		            if(bug>2)fprintf(Error," OutText G '%s' %d %d %d\n", s, $2->p->x +ox, $2->p->y +oy, TextSize);
 		    	    OutText(1, s, $2->p->x +ox, -$2->p->y +oy, TextSize);
 		    	} else {
-		            if(bug>2)fprintf(Error," Out:Text L '%s' %d %d %d\n", s, $2->p->x +ox, $2->p->y +oy, TextSize);
+		            if(bug>2)fprintf(Error," OutText L '%s' %d %d %d\n", s, $2->p->x +ox, $2->p->y +oy, TextSize);
 		    	    OutText(0, s, $2->p->x +ox, -$2->p->y +oy, TextSize);
 		    	}
 		    }
