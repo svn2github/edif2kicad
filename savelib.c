@@ -90,8 +90,8 @@ OutEnd()
   fclose(FileEESchema);
 }
 
-#define OFF 500
-// #define OFF 0
+// #define OFF 500
+#define OFF 0
 OutText(g,s,x,y,size)
 char *s;
 int   g, x,y;
@@ -136,9 +136,9 @@ int fx, fy;
   fprintf(FileEESchema,"Connection ~ %d %d\n", fx, fy);
 }
 
-OutInst(reflib, refdes, value, foot, ox, oy, rx, ry, vx, vy, Rot)
+OutInst(reflib, refdes, value, foot, ts, ox, oy, rx, ry, vx, vy, rflg, vflg, Rot)
 char *reflib, *refdes, *value, *foot;
-int ox, oy, rx, ry, vx, vy, Rot[2][2];
+int ts, ox, oy, rx, ry, vx, vy, Rot[2][2], rflg, vflg;
 {
 extern float scale;
 
@@ -155,8 +155,9 @@ F 2 "TO220" H 5950 9200 60  0000 C C
         1    0    0    -1
 $EndComp
 */
-int fx, fy, frx, fry, fvx, fvy;
+int fts, fx, fy, frx, fry, fvx, fvy;
 
+  fts = 0.6 * scale * (float) ts;
   fx  = OFF + scale * (float) ox; fy  = OFF + scale * (float) oy;
   frx = OFF + scale * (float) rx; fry = OFF + scale * (float) ry;
   fvx = OFF + scale * (float) vx; fvy = OFF + scale * (float) vy;
@@ -168,13 +169,15 @@ int fx, fy, frx, fry, fvx, fvy;
   fprintf(FileEESchema,"U %d %d %8.8lX\n", 1, 1, 0l);
   fprintf(FileEESchema,"P %d %d\n", fx, fy);
 if(refdes != NULL){
-  fprintf(FileEESchema,"F 0 \"%s\" %c %d %d %d 0000 \n", refdes, Rot[0][1]?'V':'H',frx, fry, TEXT_SIZE);
+  fprintf(FileEESchema,"F 0 \"%s\" %c %d %d %d 000%d L T\n", refdes, Rot[0][1]?'V':'H',
+			frx, (3*fy-2*fry), fts, rflg);
 }
 if(value != NULL){
-  fprintf(FileEESchema,"F 1 \"%s\" %c %d %d %d 0000 \n", value,  Rot[0][1]?'V':'H',fvx,  fvy, TEXT_SIZE);
+  fprintf(FileEESchema,"F 1 \"%s\" %c %d %d %d 000%d L T\n", value,  Rot[0][1]?'V':'H',
+			fvx, (3*fy-2*fvy), fts, vflg);
 }
 if(foot != NULL && foot[0] != 0) {
-  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001 \n", foot, fx+50, fy+50, TEXT_SIZE);
+  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001 L T\n", foot, fx+50, fy+50, fts);
 }
   fprintf(FileEESchema,"  1 %d %d\n", fx, fy);
   fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0][0], Rot[0][1], Rot[1][0], Rot[1][1]);
@@ -272,7 +275,7 @@ extern float scale;
 	fprintf(ExportFile,"F0 \"%s\" %d %d %d %c %c\n",
 				LibEntry->Prefix,
 				x1, y1,
-				LibEntry->PrefixSize,
+				(int)scale*LibEntry->PrefixSize,
 				LibEntry->PrefixOrient == 0 ? 'H' : 'V',
 				LibEntry->DrawPrefix ? 'V' : 'I' );
 
@@ -281,7 +284,7 @@ extern float scale;
 	fprintf(ExportFile,"F1 \"%s\" %d %d %d %c %c\n",
 				LibEntry->Name,
 				x1, y1,
-				LibEntry->NameSize,
+				(int)scale*LibEntry->NameSize,
 				LibEntry->NameOrient == 0 ? 'H' : 'V',
 				LibEntry->DrawName ? 'V' : 'I' );
 
@@ -295,7 +298,7 @@ extern float scale;
 				Field->FieldId,
 				Field->Text,
 				x1, y1,
-				Field->Size,
+				(int)scale*Field->Size,
 				Field->Orient == 0 ? 'H' : 'V',
 				(Field->Flags & TEXT_NO_VISIBLE) ? 'I' : 'V' );
 		}
@@ -347,7 +350,7 @@ extern float scale;
 					fprintf(ExportFile,"T %d %d %d %d %d %d %d %s\n",
 						DRAWSTRUCT->Horiz,
 						x1, y1,
-						DRAWSTRUCT->size, DRAWSTRUCT->type,
+						(int)scale*DRAWSTRUCT->size, DRAWSTRUCT->type,
 						DrawEntry->Unit,DrawEntry->Convert,
 						DRAWSTRUCT->Text );
 					break;

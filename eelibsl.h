@@ -177,14 +177,12 @@ typedef struct LibraryEntryStruct {
 							   = ALIAS pour struct LibraryAliasType */
 	char Name[PART_NAME_LEN + 1];			/* Part name. */
 	char Prefix[PREFIX_NAME_LEN + 1];		/* Prefix ( U, IC ... ) */
-	char Foot[FOOT_NAME_LEN + 1];		/* Footprint name. */
 	char * AliasList;				/* Pointeur sur la liste des ALIAS de ce composant */
 	int NamePosX,   NamePosY,   NameOrient,   NameSize;
-	int FootPosX,   FootPosY,   FootOrient,   FootSize;
 	int PrefixPosX, PrefixPosY, PrefixOrient, PrefixSize;
 	int NumOfUnits;
 	int TextInside;
-	BooleanType DrawPinNum, DrawPinName, DrawName, DrawPrefix, DrawFoot;
+	BooleanType DrawPinNum, DrawPinName, DrawName, DrawPrefix;
 	LibraryFieldEntry *Fields;			/* Liste des Champs auxiliaires */
 	LibraryDrawEntryStruct *Drawings;		/* How to draw this part */
 	int BBoxMinX, BBoxMaxX, BBoxMinY, BBoxMaxY;	/* BBox around the part. */
@@ -192,8 +190,8 @@ typedef struct LibraryEntryStruct {
 } LibraryEntryStruct;
 
 typedef struct LibraryStruct {
-	char Name[41];				/* Name of library loaded. */
-	int NumOfParts;				/* Number of parts this library has. */
+	char 		*Name;			/* Name of library loaded. */
+	int 		NumOfParts;		/* Number of parts this library has. */
 	struct LibraryEntryStruct *Entries;	/* Parts themselves are saved here. */
 	struct LibraryStruct *nxt;		/* Point on next lib in chain. */
 } LibraryStruct;

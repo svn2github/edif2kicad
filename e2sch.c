@@ -7,7 +7,7 @@
 #include "ed.h"
 #include "eelibsl.h"
 
-int bug=0;  		// debug level: 
+int bug=5;  		// debug level: 
 int yydebug=0;
 
 char *InFile = "-";
@@ -35,7 +35,7 @@ main(int argc, char *argv[])
   fprintf(stderr,"*** %s Version %s ***\n", progname, version);
 
   if( argc != 2 ) {
-     fprintf(stderr, " usage: %s EDIDsrc \n") ; return(1);
+     fprintf(stderr, " usage: %s EDIFsrc \n") ; return(1);
   }
 
   InFile= argv[1];
@@ -45,7 +45,7 @@ main(int argc, char *argv[])
   }
 
   Libs=NULL;
-  fprintf(stderr, "Parsing %s\n", InFile);
+  fprintf(stderr, "Parsing %s & writing .sch file\n", InFile);
   ParseEDIF(FileEdf, stderr);
 
   fprintf(stderr, "Writting Libs \n");
@@ -61,7 +61,7 @@ main(int argc, char *argv[])
   }
 
   pass2++;
-  freopen(InFile, "rt", FileEdf);
+//  freopen(InFile, "rt", FileEdf);
 
   fprintf(stderr, " BonJour\n");
   return(0);

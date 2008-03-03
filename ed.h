@@ -42,6 +42,7 @@ struct FigGrpStruct {
 
 struct plst { int x, y; struct plst *nxt;};
 struct st   { char *s; struct plst *p; int n; struct st *nxt;};
+struct pwr  { char *s, *r ; struct pwr *nxt;};
 
 #endif
 
