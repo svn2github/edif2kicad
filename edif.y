@@ -2686,7 +2686,7 @@ Property  :	PROPERTY PropNameDef _Property PopC
 			New->U.Pin.posY     = y;
 			New->U.Pin.Len      = 0;
 			New->U.Pin.PinShape = NONE;         // NONE, DOT, CLOCK, SHORT
-			New->U.Pin.PinType  = PIN_UNSPECIFIED;
+			New->U.Pin.PinType  = PIN_POWER;
 			New->U.Pin.Orient   = PIN_UP;
 			New->U.Pin.Flags    = 1;            /* Pin InVisible */
 			New->U.Pin.SizeNum  = TextSize;
