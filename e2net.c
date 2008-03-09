@@ -8,7 +8,7 @@
 #include "eelibsl.h"
 
 int yydebug=0;
-int bug=0;  		// debug level: >2 netlist, >5 schematic, >8 all
+int bug=3;  		// debug level: >2 netlist, >5 schematic, >8 all
 
 char *InFile = "-";
 
@@ -22,7 +22,7 @@ global float scale;
 
 main(int argc, char *argv[])
 {
-  char * version      = "0.9";
+  char * version      = "0.91";
   char * progname;
 
   progname = strrchr(argv[0],'/');
@@ -91,7 +91,6 @@ main(int argc, char *argv[])
     }
   }
 
-#ifdef NOT
   // dump connections by component
   strcpy(s1,  "" );
   for (start=cons ; start != NULL ; start = start->nxt ){
@@ -101,6 +100,7 @@ main(int argc, char *argv[])
       strcpy(s1,  start->ref);
   }
 
+#ifdef NOT
   while(insts != NULL){
     printf("%5s %s\n", insts->ins, insts->sym);
     insts = insts->nxt;

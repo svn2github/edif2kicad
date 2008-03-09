@@ -40,7 +40,7 @@ LibraryDrawEntryStruct   *LDptr, *New=NULL, *INew;
 int  		 num, *Poly, TextSize=SIZE_PIN_TEXT;
 char 		*bad="BBBB", *s, fname[30], **eptr;
 struct plst 	*pl, zplst = {0,0,NULL};
-struct st	*ref, *val, refI, valI;
+struct st	*ref, *val, refI, valI, *stptr;
 struct pwr 	*stp, *pwrSym=NULL;
 char 		Foot[FOOT_NAME_LEN + 1];
 int convert=1;	  // normal
@@ -101,7 +101,7 @@ char 		*libRef=NULL, *cellRef=NULL, *cur_pnam, *cur_nname, cur_Orient=PIN_N;
 %type 	<st>	Boolean _Boolean Integer _Integer MiNoMa _MiNoMa Number _Number
 %type	<st>	TypedValue Property _Property Owner 
 %type	<st>	Symbol _Symbol Figure _Figure Comment _Comment
-%type	<st>	Justify _Justify _DisplayJust 
+%type	<st>	Justify _Justify _DisplayJust Net _Net Joined _Joined
 
 %token	<st>	IDENT
 %token	<st>	INT
@@ -1403,15 +1403,15 @@ InstNameDef :	NameDef
 
 Instance :	INSTANCE InstNameDef _Instance PopC
 		{
-		$$=$2; ox=oy=0; // fwb 
+		$$=$2; ox=oy=0; 
 		if(bug>2){
-		    fprintf(Error,"  INSTANCE:%s '%s' ref '%s' ", $2->s, cellRef, ref->s);
-		    if(val != NULL && val->s != NULL)
-		        fprintf(Error,"val '%s' ", val->s);
+		    fprintf(Error,"  INSTANCE:%s '%s' ", $2->s, cellRef);
+		    if(ref != NULL                  ) fprintf(Error,"ref '%s' ", ref->s);
+		    if(val != NULL && val->s != NULL) fprintf(Error,"val '%s' ", val->s);
 	            fprintf(Error,"  oxy=%d,%d \n", ox,oy);
 		}
 
-		    if( (val->s == NULL) && (strstr(cellRef, "JUNCTION")!=NULL || strstr($2->s, "TIE")!=NULL) ){
+		    if( (val == NULL) && (strstr(cellRef, "JUNCTION")!=NULL || strstr($2->s, "TIE")!=NULL) ){
 			if(bug>2)fprintf(Error,"  OutConn '%s' %d %d \n\n", $2->s, tx, ty);
 		      	OutConn( tx, -ty);
 		    } else {
@@ -1427,13 +1427,12 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 		      	if( stp != NULL ){
 		            sprintf(fname,"#PWR%d", nPwr++);
 		            OutInst(cellRef, fname, cur_pnam, Foot, TextSize, tx, -ty,
-			      tx, -ty, tx, -ty,                                         0, 0, IRot);
-		            if(bug>2)fprintf(Error,"  OutInst '%s' '%s' '%s' '%s' %d %d,%d %d,%d %d,%d [%d %d %d %d]\n\n", 
+			            tx, -ty, tx, -ty,                                         0, 0, IRot);
+		            if(bug>2)fprintf(Error,"  OutInst '%s' '%s' '%s' '%s' (%d,%d) [%d %d %d %d]\n\n", 
 		                cellRef, fname, cur_pnam, Foot, TextSize, tx, -ty, 
-			        ox+ref->p->x, -oy-ref->p->y, ox+val->p->x, -oy-val->p->y, 
 		                IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
 		      	}else{
-			    if( ref->s != NULL ){
+			    if( ref != NULL && ref->s != NULL ){
 		                OutInst(cellRef, ref->s, val->s, Foot, TextSize, tx, -ty, 
 			                ox+ref->p->x, -oy-ref->p->y, ox+val->p->x, -oy-val->p->y, 0, 0, IRot);
 		                if(bug>2)fprintf(Error,"  OutInst '%s' '%s' '%s' '%s' %d %d,%d %d,%d %d,%d [%d %d %d %d]\n\n", 
@@ -1443,10 +1442,9 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 			    } else {
 		                sprintf(fname,"#ND%d", nPwr++);
 		                OutInst(cellRef, fname, cur_pnam, Foot, TextSize, tx, -ty, 
-			                ox+ref->p->x, -oy-ref->p->y, ox+val->p->x, -oy-val->p->y, 0, 0, IRot);
-		                if(bug>2)fprintf(Error,"  OutInst '%s' '%s' '%s' '%s' %d %d,%d %d,%d %d,%d [%d %d %d %d]\n\n", 
+			                tx, -ty, tx, -ty,                                         0, 0, IRot);
+		                if(bug>2)fprintf(Error,"  OutInst '%s' '%s' '%s' '%s' (%d,%d) [%d %d %d %d]\n\n", 
 		                    cellRef, fname, cur_pnam, Foot, TextSize, tx, -ty, 
-			            ox+ref->p->x, -oy-ref->p->y, ox+val->p->x, -oy-val->p->y, 
 		                    IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
 			  }
 		      }
@@ -1621,10 +1619,13 @@ Isolated :	ISOLATED PopC
 	 ;
 
 Joined :	JOINED _Joined PopC
+		{$$=$2;}
        ;
 
 _Joined :
+		{$$=NULL;}
 	|	_Joined PortRef
+		{ if(bug>2)fprintf(Error,"%5d _Joined PortRef: '%s'\n", LineNumber, $2->s);}
 	|	_Joined PortList
 	|	_Joined GlobPortRef
 	;
@@ -1958,13 +1959,21 @@ NameRef :	Ident
 
 NetNameDef :	NameDef
 		{
-		if(bug>4)fprintf(Error,"%5d NetNameDef: '%s'\n", LineNumber, $1->s);
-		cur_nnam = $1->s;
+		if(bug>2){
+		    fprintf(Error,"%5d NetNameDef: '%s' ", LineNumber, $1->s);
+		    if($1->nxt !=NULL)fprintf(Error,"'%s' ", $1->nxt->s);
+		    fprintf(Error,"\n");
+		}
+		if($1->nxt == NULL)
+		   cur_nnam = $1->s;
+		else
+		   cur_nnam = $1->nxt->s;
 		}
 	   |	Array
 	   ;
 
 Net 	:	NET NetNameDef _Net PopC
+		{$$=$2;}
     	;
 
 _Net :		Joined
@@ -1973,6 +1982,12 @@ _Net :		Joined
      |		_Net Figure
      |		_Net Net
      |		_Net Instance
+		{
+		if(bug>2){
+		    fprintf(Error,"%5d  _Net Instance:'%s' ", LineNumber, $2->s);
+		    fprintf(Error,"\n");
+		}
+		}
      |		_Net CommGraph
      |		_Net Property
      |		_Net Comment
@@ -2590,13 +2605,12 @@ PortNameRef :	NameRef
 PortRef     :	PORTREF PortNameRef _PortRef PopC
 		{$$=$2; // $$->nxt=$3;
 		if(bug>2){
-		     fprintf(Error," PortRef:'%s' ", $2->s);
-		     if($2->nxt != NULL)fprintf(Error,"rena:'%s' ", $2->nxt->s);
-		     if($3      != NULL)fprintf(Error,"inst:'%s' ", $3->s);
+		     fprintf(Error," PORTREF:'%s' ", $2->s);
+		     if($2->nxt != NULL)fprintf(Error,"rename:'%s' ", $2->nxt->s);
+		     if($3      != NULL)fprintf(Error,"InstRef:'%s' ", $3->s);
 		     fprintf(Error,"\n");
 		}
-
-		if(cptr != NULL)  // InstRef usually first
+		if(cptr != NULL && $3 != NULL) 
             	  cptr->pin = $2->s;
 		}
 	    ;
@@ -2607,7 +2621,7 @@ _PortRef :
 	 |	InstanceRef
                 {$$=$1; 
 
-                if(bug>2)fprintf(Error,"InstRef: %8s \n", $1->s);
+                if(bug>2)fprintf(Error,"new cptr, InstRef: %8s curr_nnam '%s'\n", $1->s, cur_nnam);
                 cptr = (struct con *) malloc (sizeof (struct con));
                 cptr->ref = $1->s;
                 cptr->nnam = cur_nnam;
@@ -2779,7 +2793,7 @@ _RectSize :	RangeVector
 
 Rename 	  :	RENAME __Rename _Rename PopC
 		{$$=$2; $$->nxt = $3;
-		 if(bug>4)fprintf(Error,"      ReName:'%s'-'%s'\n", $2->s, $3->s);
+		 if(bug>2)fprintf(Error,"      ReName:'%s'-'%s'\n", $2->s, $3->s);
 		}
        	  ;
 
@@ -3250,15 +3264,18 @@ _View :		Interface
 		{       if(bug>3)fprintf(Error,"  _view Interface: \n");}
       |		_View Status
       |		_View Contents
-		{$$=$2; if(bug>3)fprintf(Error,"  _view Contents: '%s'\n", $2->s);
-		if( strstr($2->s, "PAGEBORDER") !=NULL || strstr($2->s, "TITLEBLOCK") !=NULL ) {
-		    strcpy(fname, LibEntry->Prefix);
-		    sprintf(LibEntry->Prefix, "#%s", fname);
-		}
-		if( strstr($2->s, "POWER") !=NULL )
-		    strcpy(LibEntry->Prefix, "#PWR");
-		    LibEntry->DrawPrefix = 1;
-		    // LibEntry->DrawName = 0;
+		{$$=$2; 
+		if( $2 != NULL ){
+		    if(bug>3)fprintf(Error,"  _view Contents: '%s'\n", $2->s);
+		    if( strstr($2->s, "PAGEBORDER") !=NULL || strstr($2->s, "TITLEBLOCK") !=NULL ) {
+		        strcpy(fname, LibEntry->Prefix);
+		        sprintf(LibEntry->Prefix, "#%s", fname);
+		    }
+		    if( strstr($2->s, "POWER") !=NULL )
+		        strcpy(LibEntry->Prefix, "#PWR");
+		        LibEntry->DrawPrefix = 1;
+		        // LibEntry->DrawName = 0;
+		    }
 		}
       |		_View Comment
       |		_View Property
