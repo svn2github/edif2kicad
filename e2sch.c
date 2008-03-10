@@ -7,7 +7,7 @@
 #include "ed.h"
 #include "eelibsl.h"
 
-int bug=5;  		// debug level: 
+int bug=0;  		// debug level: 
 int yydebug=0;
 
 char *InFile = "-";
@@ -23,7 +23,7 @@ global char  efName[50];
 
 main(int argc, char *argv[])
 {
-  char * version      = "0.9";
+  char * version      = "0.97";
   char * progname;
 
   progname = strrchr(argv[0],'/');
@@ -35,12 +35,12 @@ main(int argc, char *argv[])
   fprintf(stderr,"*** %s Version %s ***\n", progname, version);
 
   if( argc != 2 ) {
-     fprintf(stderr, " usage: %s EDIFsrc \n") ; return(1);
+     fprintf(stderr, " usage: EDIFfile \n") ; return(1);
   }
 
   InFile= argv[1];
-  if( (FileEdf = fopen( InFile, "rt" )) == NULL ) {
-       fprintf(stderr, " %s non trouve\n", InFile);
+  if( (FileEdf = fopen( InFile, "r" )) == NULL ) {
+       fprintf(stderr, " '%s' doesn't exist\n", InFile);
        return(-1);
   }
 
