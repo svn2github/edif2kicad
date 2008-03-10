@@ -8,7 +8,7 @@
 #include "eelibsl.h"
 
 int yydebug=0;
-int bug=3;  		// debug level: >2 netlist, >5 schematic, >8 all
+int bug=0;  		// debug level: >2 netlist, >5 schematic, >8 all
 
 char *InFile = "-";
 
