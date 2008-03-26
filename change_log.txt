@@ -1,5 +1,8 @@
 change_log.txt
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2008-Mar-26 fwb
+	first attempt to write multi-page schematics
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2008-Mar-3  fwb
   	Ref Desig, value location move with symbol
 	netlist improved

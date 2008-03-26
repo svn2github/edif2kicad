@@ -27,7 +27,7 @@ main()
 		last=ch;
 	        continue;
 	    }
-	    wh=0;
+	    wh=1;
 	    break;
 
 	case '"':
@@ -35,15 +35,11 @@ main()
 	    break;
 
 	case '\r':
-	    continue;
 	case '\n':
-	    if(instr)
-	        continue;
 	case ' ':
 	case '\t':
-	    if(wh++ != 0)
-		continue;
-	    ch=' ';
+	    if(wh || last=='(')
+	        continue;
 	    break;
 
         default:

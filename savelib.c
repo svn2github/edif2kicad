@@ -2,6 +2,7 @@
 	/*	savelib.cc	*/
 	/************************/
 #include <stdio.h>
+#include <string.h>
 
 #include "ed.h"
 #include "eelibsl.h"
@@ -55,13 +56,14 @@ OutHead(char *InFile, LibraryStruct *Libs)
 {
   extern char FileNameEESchema[];
 
-  fprintf(stderr, "OutHead EdifFileName %s\n", efName);
-
-  sprintf(FileNameEESchema,"%s.sch", efName);
+  sprintf(FileNameEESchema,"%s.sch", InFile);
   if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
        fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
        return(-1);
   }
+
+  fprintf(stderr,"Write %s\n", FileNameEESchema);
+  strncpy( efName, InFile, 50);
 
   fprintf(FileEESchema,"EESchema Schematic File Version 1\n");
   fprintf(FileEESchema,"LIBS:");
@@ -86,6 +88,8 @@ OutHead(char *InFile, LibraryStruct *Libs)
 
 OutEnd()
 {
+  if(FileEESchema == NULL)
+     return;
   fprintf(FileEESchema,"$EndSCHEMATC\n");
   fclose(FileEESchema);
 }

@@ -626,7 +626,10 @@ CellNameDef :	NameDef
 	    ;
 
 Cell        :	CELL CellNameDef _Cell PopC
-		{$$=$2; if(bug>3)fprintf(Error,"  CELL: '%s'\n", $2->s); }
+		{$$=$2; if(bug>3)fprintf(Error,"  CELL: '%s'\n", $2->s); 
+		        if(bug>2)fprintf(Error,"  OutEnd '%s' \n\n", $2->s);
+		 OutEnd(); SchHead=1;
+		}
             ;
 
 _Cell       :	CellType
@@ -880,7 +883,8 @@ Design 	    :	DESIGN DesignNameDef _Design PopC
 		if(bug>0 && $3 == NULL)fprintf(Error,"Design: '%s' ''  \n\n", $2->s); 
 	
 		DesignName = CurrentLib;
-		OutEnd();
+		OutPro(Libs);
+		// OutEnd();
 		// fwb
 		// strcpy(CurrentLib->Name, "DESIGN");
 		// CurrentLib->NumOfParts = 0; // fixme - previous Lib was DESIGN
@@ -1389,10 +1393,10 @@ Initial :	INITIAL PopC
 InstNameDef :	NameDef
 		{
 		if(bug>2)fprintf(Error,"%5d InstNameDef: '%s'\n", LineNumber, $1->s); 
-		if( SchHead ){
-		    if(bug>2)fprintf(Error,"  OutHead'%s' \n\n", Libs->Name);
-		    OutHead($1->s, Libs); OutPro(Libs); SchHead=0;
-		}
+		// if( SchHead ){
+		//     if(bug>2)fprintf(Error,"  OutHead'%s' \n\n", Libs->Name);
+		//     OutHead($1->s, Libs); OutPro(Libs); SchHead=0;
+		// }
 		tx=ty=ox=oy=0;
 		inst_pin_name_vis=1, inst_pin_num_vis=1;
 		Foot[0] = 0;
@@ -1411,7 +1415,7 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 	            fprintf(Error,"  oxy=%d,%d \n", ox,oy);
 		}
 
-		    if( (val == NULL) && (strstr(cellRef, "JUNCTION")!=NULL || strstr($2->s, "TIE")!=NULL) ){
+		    if( (val ==NULL || val->s ==NULL) && (strstr(cellRef, "JUNCTION")!=NULL || strstr($2->s, "TIE")!=NULL) ){
 			if(bug>2)fprintf(Error,"  OutConn '%s' %d %d \n\n", $2->s, tx, ty);
 		      	OutConn( tx, -ty);
 		    } else {
@@ -1427,7 +1431,7 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 		      	if( stp != NULL ){
 		            sprintf(fname,"#PWR%d", nPwr++);
 		            OutInst(cellRef, fname, cur_pnam, Foot, TextSize, tx, -ty,
-			            tx, -ty, tx, -ty,                                         0, 0, IRot);
+			            tx, -ty, tx, -ty,                                         0, 1, IRot);
 		            if(bug>2)fprintf(Error,"  OutInst '%s' '%s' '%s' '%s' (%d,%d) [%d %d %d %d]\n\n", 
 		                cellRef, fname, cur_pnam, Foot, TextSize, tx, -ty, 
 		                IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
@@ -2240,7 +2244,12 @@ Page :		PAGE _Page PopC
      ;
 
 _Page :		InstNameDef
-		{if(bug>2)fprintf(Error,"   _Page: InstNameDef? '%s'\n", $1->s);}
+		{if(bug>2)fprintf(Error,"   _Page: InstNameDef? '%s'\n", $1->s);
+		    if( SchHead ){
+		        if(bug>2)fprintf(Error,"  OutHead'%s' \n\n", $1->s);
+		        OutHead($1->s, Libs); SchHead=0;
+		    }
+		}
       |		_Page Instance
       |		_Page Net
       |		_Page NetBundle
