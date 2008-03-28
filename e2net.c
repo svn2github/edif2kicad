@@ -4,6 +4,7 @@
 #define global
 
 #include <stdio.h>
+#include <string.h>
 #include "ed.h"
 #include "eelibsl.h"
 

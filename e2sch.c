@@ -4,10 +4,11 @@
 #define global
 
 #include <stdio.h>
+#include <string.h>
 #include "ed.h"
 #include "eelibsl.h"
 
-int bug=4;  		// debug level: 
+int bug=0;  		// debug level: 
 int yydebug=0;
 
 char *InFile = "-";

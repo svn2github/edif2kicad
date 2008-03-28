@@ -15,7 +15,7 @@ OutPro(LibraryStruct * Libs)
   extern char FileNameKiPro[];
   int i;
 
-  sprintf(FileNameKiPro,"%s.pro", efName);
+  sprintf(FileNameKiPro,"%s.pro", schName);
   if( (FileKiPro = fopen( FileNameKiPro, "wt" )) == NULL ) {
        fprintf(stderr, " %s impossible a creer\n", FileNameKiPro);
        return(-1);
@@ -52,18 +52,17 @@ OutPro(LibraryStruct * Libs)
   }
 }
 
-OutHead(char *InFile, LibraryStruct *Libs)
+OutHead(LibraryStruct *Libs)
 {
   extern char FileNameEESchema[];
 
-  sprintf(FileNameEESchema,"%s.sch", InFile);
+  sprintf(FileNameEESchema,"%s.sch", schName);
   if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
        fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
        return(-1);
   }
 
   fprintf(stderr,"Write %s\n", FileNameEESchema);
-  strncpy( efName, InFile, 50);
 
   fprintf(FileEESchema,"EESchema Schematic File Version 1\n");
   fprintf(FileEESchema,"LIBS:");
@@ -84,6 +83,8 @@ OutHead(char *InFile, LibraryStruct *Libs)
   fprintf(FileEESchema,"Comment4 \"\"\n");
   fprintf(FileEESchema,"$EndDescr\n\n");
   fflush(FileEESchema);
+
+  return 1;
 }
 
 OutEnd()
@@ -92,6 +93,22 @@ OutEnd()
      return;
   fprintf(FileEESchema,"$EndSCHEMATC\n");
   fclose(FileEESchema);
+}
+
+OutSheets(struct pwr *pgs)
+{
+  int x;
+
+  if(FileEESchema == NULL)
+     return;
+  for( x=800 ; pgs != NULL ; pgs=pgs->nxt, x += 1200 ) {
+    fprintf(FileEESchema, "$Sheet\n");
+    fprintf(FileEESchema, "S %d  800  900  2100\n", x);
+    fprintf(FileEESchema, "U %d\n", x);
+    fprintf(FileEESchema, "F0 \"%s\" 60\n", pgs->s);
+    fprintf(FileEESchema, "F1 \"%s.sch\" 60\n", pgs->s);
+    fprintf(FileEESchema, "$EndSheet\n\n");
+  }
 }
 
 // #define OFF 500

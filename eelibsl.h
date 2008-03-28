@@ -200,7 +200,7 @@ global LibraryStruct          	*Libs,  *CurrentLib, *DesignName, *LSptr;
 global LibraryEntryStruct 	*LibEntry, *LEptr;
 global LibraryDrawEntryStruct 	*Drawing, *LDptr;
 global LibraryFieldEntry	*InsEntry;
-global char 			 efName[50];
+global char 			 schName[50];
 
 #endif // EELIBSL_H
 

@@ -32,7 +32,7 @@ global struct inst *insts, *iptr;
 global struct con  *cons,  *cptr;
 global int    pass2;
 global float  scale;
-global char   efName[50];
+global char   schName[50];
 
 LibraryStruct		 *LSptr;
 LibraryEntryStruct	 *LEptr;
@@ -41,15 +41,16 @@ int  		 num, *Poly, TextSize=SIZE_PIN_TEXT;
 char 		*bad="BBBB", *s, fname[30], **eptr;
 struct plst 	*pl, zplst = {0,0,NULL};
 struct st	*ref, *val, refI, valI, *stptr;
-struct pwr 	*stp, *pwrSym=NULL;
+struct pwr 	*stp,       *pwrSym=NULL;  // power syms or page names
+struct pwr 	*pptr=NULL, *pgs=NULL;  
 char 		Foot[FOOT_NAME_LEN + 1];
-int convert=1;	  // normal
-int savtext=0;    // debug - no text
-float a,b,c,d,e,f,k,h;
-int  Rot[2][2], x,y, tx, ty, hx,hy, ox=0, oy=0, stop;
-int IRot[2][2];
-int InInstance=0, SchHead=1, inst_pin_name_vis=1, inst_pin_num_vis=1;
-int nPwr=0;
+int 		convert=1;	  // normal
+int 		savtext=0;    // debug - no text
+float 		a,b,c,d,e,f,k,h;
+int  		Rot[2][2], x,y, tx, ty, hx,hy, ox=0, oy=0, stop;
+int 		IRot[2][2];
+int 		InInstance=0, SchHead=1, inst_pin_name_vis=1, inst_pin_num_vis=1;
+int 		nPages=0, nPwr=0;
 
 struct FigGrpStruct *pfg=NULL, *pfgHead=NULL;
 char 		 cur_fg[20];
@@ -406,9 +407,7 @@ PopC :		')' { PopC(); }
      ;
 
 EdifFileName :	NameDef
-		{if(bug>5);fprintf(Error,"EdifFileName: %s\n", $1->s);
-		    strncpy( efName, $1->s, 50);
-		}
+		{if(bug>5);fprintf(Error,"EdifFileName: %s\n", $1->s);}
 	     ;
 
 Edif  :		EDIF EdifFileName EdifVersion EdifLevel KeywordMap _Edif PopC
@@ -622,13 +621,17 @@ CellNameDef :	NameDef
                 LibEntry->nxt = CurrentLib->Entries;
                 CurrentLib->Entries = LibEntry; CurrentLib->NumOfParts++;
 		strncpy(LibEntry->Name, $1->s, PART_NAME_LEN);
+
+		strncpy(schName, $1->s, 50);
 		}
 	    ;
 
 Cell        :	CELL CellNameDef _Cell PopC
 		{$$=$2; if(bug>3)fprintf(Error,"  CELL: '%s'\n", $2->s); 
-		        if(bug>2)fprintf(Error,"  OutEnd '%s' \n\n", $2->s);
-		 OutEnd(); SchHead=1;
+		 if( !SchHead ){
+		     if(bug>2)fprintf(Error,"  OutEnd '%s' \n\n", schName);
+		     OutEnd(); SchHead=1;
+		 }
 		}
             ;
 
@@ -883,8 +886,16 @@ Design 	    :	DESIGN DesignNameDef _Design PopC
 		if(bug>0 && $3 == NULL)fprintf(Error,"Design: '%s' ''  \n\n", $2->s); 
 	
 		DesignName = CurrentLib;
+		if( nPages > 1) {
+		    strcpy(schName, "top"); // name for OutHead, OutPro
+		    OutHead(Libs);
+		    OutSheets(pgs);
+		}
+		if( !SchHead ){
+		    if(bug>2)fprintf(Error,"  OutEnd '%s' \n\n", $2->s);
+		    OutEnd(); SchHead=1;
+		}
 		OutPro(Libs);
-		// OutEnd();
 		// fwb
 		// strcpy(CurrentLib->Name, "DESIGN");
 		// CurrentLib->NumOfParts = 0; // fixme - previous Lib was DESIGN
@@ -1393,10 +1404,6 @@ Initial :	INITIAL PopC
 InstNameDef :	NameDef
 		{
 		if(bug>2)fprintf(Error,"%5d InstNameDef: '%s'\n", LineNumber, $1->s); 
-		// if( SchHead ){
-		//     if(bug>2)fprintf(Error,"  OutHead'%s' \n\n", Libs->Name);
-		//     OutHead($1->s, Libs); OutPro(Libs); SchHead=0;
-		// }
 		tx=ty=ox=oy=0;
 		inst_pin_name_vis=1, inst_pin_num_vis=1;
 		Foot[0] = 0;
@@ -2245,10 +2252,16 @@ Page :		PAGE _Page PopC
 
 _Page :		InstNameDef
 		{if(bug>2)fprintf(Error,"   _Page: InstNameDef? '%s'\n", $1->s);
-		    if( SchHead ){
-		        if(bug>2)fprintf(Error,"  OutHead'%s' \n\n", $1->s);
-		        OutHead($1->s, Libs); SchHead=0;
-		    }
+		 if( SchHead ){
+		     if(bug>2)fprintf(Error,"  OutHead '%s' \n\n", schName);
+		     OutHead(Libs); SchHead=0;
+		 }
+	    	 pptr = (struct pwr *) Malloc(sizeof(struct pwr));
+	    	 pptr->s   = $1->s; 
+	    	 pptr->r   = NULL;
+   	    	 pptr->nxt = pgs;
+       	    	 pgs = pptr;
+		 nPages++;
 		}
       |		_Page Instance
       |		_Page Net
