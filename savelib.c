@@ -69,7 +69,7 @@ OutHead(LibraryStruct *Libs)
   for( ; Libs != NULL; Libs = Libs->nxt ){
       fprintf(FileEESchema, "%s,", Libs->Name);
   }
-  fprintf(FileEESchema,"\nEELAYER 0 0\nEELAYER END\n\n");
+  fprintf(FileEESchema,"\nEELAYER 0 0\nEELAYER END\n");
 
   fprintf(FileEESchema,"$Descr B 17000 11000\n");
   fprintf(FileEESchema,"Sheet 1 1\n");

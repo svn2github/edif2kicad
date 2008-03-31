@@ -620,16 +620,21 @@ CellNameDef :	NameDef
   		LibEntry->Drawings = NULL;
                 LibEntry->nxt = CurrentLib->Entries;
                 CurrentLib->Entries = LibEntry; CurrentLib->NumOfParts++;
-		if( $1->nxt == NULL || $1->nxt->s == NULL )
-		    strncpy(LibEntry->Name, $1->s, PART_NAME_LEN);
-		else
-		    strncpy(LibEntry->Name, $1->nxt->s, PART_NAME_LEN);
 
-		strncpy(schName, LibEntry->Name, 50);
+		strncpy(LibEntry->Name, $1->s, PART_NAME_LEN);
+		strncpy(schName,        $1->s, PART_NAME_LEN);
+		LibEntry->AliasList = NULL;
+#ifdef NOT
+		if( $1->nxt != NULL && $1->nxt->s != NULL ){
+		    strncpy(LibEntry->Name, $1->nxt->s, PART_NAME_LEN);
+		    strncpy(schName,        $1->nxt->s, PART_NAME_LEN);
+		    LibEntry->AliasList = strdup($1->s);
+		}
+#endif
+		if(bug>2)fprintf(Error,"  Set schName '%s'\n", schName);
 		}
 	    ;
-
-Cell        :	CELL CellNameDef _Cell PopC
+Cell        :  CELL CellNameDef _Cell PopC
 		{$$=$2; if(bug>3)fprintf(Error,"  CELL: '%s'\n", $2->s); 
 		 if( !SchHead ){
 		     if(bug>2)fprintf(Error,"  OutEnd '%s' \n\n", schName);
@@ -2260,7 +2265,11 @@ _Page :		InstNameDef
 		     OutHead(Libs); SchHead=0;
 		 }
 	    	 pptr = (struct pwr *) Malloc(sizeof(struct pwr));
-	    	 pptr->s   = $1->s; 
+		 if($1->nxt != NULL && $1->nxt->s != NULL)
+	    	   pptr->s   = $1->nxt->s; 
+		 else
+	    	   pptr->s   = $1->s; 
+
 	    	 pptr->r   = NULL;
    	    	 pptr->nxt = pgs;
        	    	 pgs = pptr;
@@ -2436,7 +2445,7 @@ PortNameDef :	NameDef
 		        New->U.Pin.ReName = NULL;
 		        strncpy(New->U.Pin.Num, $1->s, 4); // default pin#
 		    }
-		    New->U.Pin.Name = $1->s;
+		    New->U.Pin.Name = strdup($1->s);
 		    if(bug>2)fprintf(Error,"  _Port PortNameDef Pin:'%s':'%s'\n", New->U.Pin.Name, New->U.Pin.Num);
 		}
 	    |	Array
@@ -5220,8 +5229,10 @@ int yylex()
 	  yylval.st = st ; 
           Stack(yytext, STR);
           return (STR);
-        } else  if (c == '%')
+        } else  if (c == '%'){
           s = L_ASCIICHAR;
+        } else  if (c == ' ')
+	  PushString('_');
         else
           PushString(c);
         l = 0;
