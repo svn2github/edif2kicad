@@ -620,9 +620,12 @@ CellNameDef :	NameDef
   		LibEntry->Drawings = NULL;
                 LibEntry->nxt = CurrentLib->Entries;
                 CurrentLib->Entries = LibEntry; CurrentLib->NumOfParts++;
-		strncpy(LibEntry->Name, $1->s, PART_NAME_LEN);
+		if( $1->nxt == NULL || $1->nxt->s == NULL )
+		    strncpy(LibEntry->Name, $1->s, PART_NAME_LEN);
+		else
+		    strncpy(LibEntry->Name, $1->nxt->s, PART_NAME_LEN);
 
-		strncpy(schName, $1->s, 50);
+		strncpy(schName, LibEntry->Name, 50);
 		}
 	    ;
 
@@ -5208,7 +5211,7 @@ int yylex()
        *	arbitrarily long.
        */
       case L_STRING:
-        if (c == '\r')
+        if (c == '\r' || c == '\n')
           ;
         else if (c == '"' || c == EOF){
 	  st = (struct st *)Malloc(sizeof (struct st));

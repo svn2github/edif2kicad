@@ -36,6 +36,7 @@ main()
 
 	case '\r':
 	case '\n':
+	    continue;
 	case ' ':
 	case '\t':
 	    if(wh || last=='(')
