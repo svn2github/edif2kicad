@@ -2265,9 +2265,9 @@ _Page :		InstNameDef
 		     OutHead(Libs); SchHead=0;
 		 }
 	    	 pptr = (struct pwr *) Malloc(sizeof(struct pwr));
-		 if($1->nxt != NULL && $1->nxt->s != NULL)
-	    	   pptr->s   = $1->nxt->s; 
-		 else
+		 // if($1->nxt != NULL && $1->nxt->s != NULL)
+	    	   // pptr->s   = $1->nxt->s; 
+		 // else
 	    	   pptr->s   = $1->s; 
 
 	    	 pptr->r   = NULL;
