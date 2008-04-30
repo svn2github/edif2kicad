@@ -485,20 +485,21 @@ _Apply :	Cycle
 
 Arc :		ARC PointValue PointValue PointValue PopC
 		{
-		if(bug>4)fprintf(Error,"New ARC LibraryDrawEntryStruct\n");
+		if(bug>1)fprintf(Error,"New ARC LibraryDrawEntryStruct\n");
 		    New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
                     New->nxt = LibEntry->Drawings;
 		    LibEntry->Drawings = New; New->Unit = 0; New->Convert = convert;
 
                     New->DrawType = ARC_DRAW_TYPE; 
 		
-		    a=$2->x; b=$2->y; c=$3->x; d=$3->y; e=$4->x; f=$4->y;
+		    a=$2->x; b= $2->y; c=$3->x; d= $3->y; e=$4->x; f= $4->y;
 		    h = ((a*a+b*b)*(f-d)+(c*c+d*d)*(b-f)+(e*e+f*f)*(d-b))/(a*(f-d)+c*(b-f)+e*(d-b))/2;
 		    k = ((a*a+b*b)*(e-c)+(c*c+d*d)*(a-e)+(e*e+f*f)*(c-a))/(b*(e-c)+d*(a-e)+f*(c-a))/2;
-		    if(bug>4)fprintf(Error," a=%f b=%f k=%f h=%f\n", a,b,k,h);
-                    New->U.Arc.x  = (int) h ;
-                    New->U.Arc.y  = (int) k ;
+                    New->U.Arc.x  = (int)  h ;
+                    New->U.Arc.y  = (int)  k ;
 		    New->U.Arc.r = sqrt((a-h)*(a-h) + (b-k)*(b-k));
+		    if(bug>1)fprintf(Error," a=%06f b=%06f c=%06f d=%06f e=%06f f=%06f : h=%06f k=%06f x %d y %d r %d\n", 
+			a,b,c,d,e,f,h,k, New->U.Arc.x, New->U.Arc.y, New->U.Arc.r);
 
 		    New->U.Arc.t1 = (int)(atan2(b-k, a-h) * 1800 /M_PI);
                     while( New->U.Arc.t1 < 0 ) New->U.Arc.t1 += 3600;
@@ -635,7 +636,7 @@ CellNameDef :	NameDef
 		}
 	    ;
 Cell        :  CELL CellNameDef _Cell PopC
-		{$$=$2; if(bug>3)fprintf(Error,"  CELL: '%s'\n", $2->s); 
+		{$$=$2; if(bug>1)fprintf(Error,"  CELL: '%s'\n", $2->s); 
 		 if( !SchHead ){
 		     if(bug>2)fprintf(Error,"  OutEnd '%s' \n\n", schName);
 		     OutEnd(); SchHead=1;
@@ -1015,21 +1016,21 @@ _Display      :	FigGrpNameRef
 	      ;
 
 _DisplayJust :
-		{$$=NULL; if(bug>4)fprintf(Error,"%5d _DisplayJust: NULL\n", LineNumber); }
+		{$$=NULL; if(bug>5)fprintf(Error,"%5d _DisplayJust: NULL\n", LineNumber); }
 	     |	Justify
-		{         if(bug>4)fprintf(Error,"%5d _DisplayJust: %s\n", LineNumber, $1->s); }
+		{         if(bug>5)fprintf(Error,"%5d _DisplayJust: %s\n", LineNumber, $1->s); }
 	     ;
 
 _DisplayOrien :
-		{$$=0;    if(bug>4)fprintf(Error,"%5d _DisplayOrient: NULL\n", LineNumber); }
+		{$$=0;    if(bug>5)fprintf(Error,"%5d _DisplayOrient: NULL\n", LineNumber); }
 	      |	Orientation
-		{         if(bug>4)fprintf(Error,"%5d _DisplayOrient: %c\n", LineNumber, $1); }
+		{         if(bug>5)fprintf(Error,"%5d _DisplayOrient: %c\n", LineNumber, $1); }
 	      ;
 
 _DisplayOrg :
-		{$$=NULL; if(bug>4)fprintf(Error,"%5d _DisplayOrg: NULL\n", LineNumber); }
+		{$$=NULL; if(bug>5)fprintf(Error,"%5d _DisplayOrg: NULL\n", LineNumber); }
 	    |	Origin
-		{         if(bug>4)fprintf(Error,"%5d _DisplayOrg: %d %d \n", LineNumber, $1->x, $1->y); }
+		{         if(bug>5)fprintf(Error,"%5d _DisplayOrg: %d %d \n", LineNumber, $1->x, $1->y); }
 	    ;
 
 Dominates :	DOMINATES _Dominates PopC
@@ -1129,7 +1130,7 @@ FigGrp  :	FIGUREGROUP _FigGrp PopC
 
 _FigGrp :	FigGrpNameDef
 		{$$->p=NULL; 
-		 if(bug>2)fprintf(Error,"%5d _FigGrp: FigGrpNameDef cur_fg:%s\n", LineNumber, $1->s); 
+		 if(bug>5)fprintf(Error,"%5d _FigGrp: FigGrpNameDef cur_fg:%s\n", LineNumber, $1->s); 
 		 strncpy(cur_fg, $1->s, 20);
 		 for( pfg=pfgHead ; pfg != NULL ; pfg=pfg->nxt )
 		     if( !strcmp($1->s, pfg->Name) )
@@ -1144,7 +1145,7 @@ _FigGrp :	FigGrpNameDef
 	|	_FigGrp CornerType
 	|	_FigGrp EndType
 	|	_FigGrp PathWidth
-		{$$->n=$2; if(bug>2)fprintf(Error,"%5d _FigGrp: PathWidth %d\n", LineNumber, $2); 
+		{$$->n=$2; if(bug>5)fprintf(Error,"%5d _FigGrp: PathWidth %d\n", LineNumber, $2); 
 		   pfg->PathWidth = $2; 
 		}
 	|	_FigGrp BorderWidth
@@ -1152,15 +1153,15 @@ _FigGrp :	FigGrpNameDef
 	|	_FigGrp FillPattern
 	|	_FigGrp BorderPat
 	|	_FigGrp TextHeight
-		{$$->n=$2; if(bug>2)fprintf(Error,"%5d _FigGrp: TextHeight %d\n", LineNumber, $2); 
+		{$$->n=$2; if(bug>5)fprintf(Error,"%5d _FigGrp: TextHeight %d\n", LineNumber, $2); 
 		   pfg->TextHeight = $2; 
 		}
 	|	_FigGrp Visible
-		{$$->n=$2; if(bug>2)fprintf(Error,"%5d _FigGrp: Visible %d\n", LineNumber, $2); }
+		{$$->n=$2; if(bug>5)fprintf(Error,"%5d _FigGrp: Visible %d\n", LineNumber, $2); }
 	|	_FigGrp Comment
-		{          if(bug>2)fprintf(Error,"%5d _FigGrp: Comment \n", LineNumber); }
+		{          if(bug>5)fprintf(Error,"%5d _FigGrp: Comment \n", LineNumber); }
 	|	_FigGrp Property
-		{          if(bug>2)fprintf(Error,"%5d _FigGrp: Property %s\n", LineNumber, $2->s); }
+		{          if(bug>5)fprintf(Error,"%5d _FigGrp: Property %s\n", LineNumber, $2->s); }
 	|	_FigGrp UserData
 	|	_FigGrp IncFigGrp
 	;
@@ -1179,7 +1180,7 @@ FigGrpOver :	FIGUREGROUPOVERRIDE _FigGrpOver PopC
 
 _FigGrpOver :	FigGrpNameRef
 		{$$->p=NULL; 
-		 if(bug>2)fprintf(Error,"%5d _FigGrpOver: FigGrpNameRef %s\n", LineNumber, $1->s); }
+		 if(bug>5)fprintf(Error,"%5d _FigGrpOver: FigGrpNameRef %s\n", LineNumber, $1->s); }
 	    |	_FigGrpOver CornerType
 	    |	_FigGrpOver EndType
 	    |	_FigGrpOver PathWidth
@@ -1188,13 +1189,15 @@ _FigGrpOver :	FigGrpNameRef
 	    |	_FigGrpOver FillPattern
 	    |	_FigGrpOver BorderPat
 	    |	_FigGrpOver TextHeight
-		{$$->n=$2; if(bug>2)fprintf(Error,"%5d _FigGrpOver: TextHeight %d\n", LineNumber, $2); }
+		{$$->n=$2; 
+		 if(bug>5)fprintf(Error,"%5d _FigGrpOver: TextHeight %d\n", LineNumber, $2); }
 	    |	_FigGrpOver Visible
-		{$$->n=$2; if(bug>2)fprintf(Error,"%5d _FigGrpOver: Visible=%d\n", LineNumber, $2); }
+		{$$->n=$2; 
+		 if(bug>5)fprintf(Error,"%5d _FigGrpOver: Visible=%d\n", LineNumber, $2); }
 	    |	_FigGrpOver Comment
-		{if(bug>2)fprintf(Error,"%5d _FigGrpOver: Comment \n", LineNumber); }
+		{if(bug>5)fprintf(Error,"%5d _FigGrpOver: Comment \n", LineNumber); }
 	    |	_FigGrpOver Property
-		{if(bug>2)fprintf(Error,"%5d _FigGrpOver: Property '%s'='%s'\n", LineNumber, $2->s, "nxt"); }
+		{if(bug>5)fprintf(Error,"%5d _FigGrpOver: Property '%s'='%s'\n", LineNumber, $2->s, "nxt"); }
 	    |	_FigGrpOver UserData
 	    ;
 
@@ -1288,6 +1291,7 @@ _Figure :	FigGrpNameDef
 		}
 	|	_Figure Rectangle
 		{
+		    $$->p=$2;
 		    if(bug>4)fprintf(Error,"New SQUARE LibraryDrawEntryStruct\n");
 		    New = (LibraryDrawEntryStruct *) Malloc(sizeof(LibraryDrawEntryStruct));
                     New->nxt = LibEntry->Drawings;
@@ -1295,10 +1299,10 @@ _Figure :	FigGrpNameDef
 
                     New->DrawType = SQUARE_DRAW_TYPE; 
                     New->U.Sqr.width = 0;
-                    New->U.Sqr.x1 = LibEntry->BBoxMinX;
-                    New->U.Sqr.y1 = LibEntry->BBoxMinY;
-                    New->U.Sqr.x2 = LibEntry->BBoxMaxX;
-                    New->U.Sqr.y2 = LibEntry->BBoxMaxY;
+                    New->U.Sqr.x1 = $2->x;
+                    New->U.Sqr.y1 = $2->y;
+                    New->U.Sqr.x2 = $2->nxt->x;
+                    New->U.Sqr.y2 = $2->nxt->y;
 		    if(bug>2)fprintf(Error,"  _Fig Rect  %d %d %d %d\n", 
 			New->U.Sqr.x1, New->U.Sqr.y1, New->U.Sqr.x2, New->U.Sqr.y2);
 		}
@@ -1451,6 +1455,7 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 		                cellRef, fname, cur_pnam, Foot, TextSize, tx, -ty, 
 		                IRot[0][0], IRot[0][1], IRot[1][0], IRot[1][1] );
 		      	}else{
+			    if(bug>4)fprintf(Error,"   Check Power NOT '%s' '%s'\n", ref->s, val->s);
 			    if( ref != NULL && ref->s != NULL ){
 		                OutInst(cellRef, ref->s, val->s, Foot, TextSize, tx, -ty, 
 			                ox+ref->p->x, -oy-ref->p->y, ox+val->p->x, -oy-val->p->y, 0, 0, IRot);
@@ -1492,7 +1497,7 @@ _Instance :	ViewRef
 	  |	_Instance PortInst
 	  |	_Instance Timing
 	  |	_Instance Designator
-		{ref = $2;}
+		{ref = $2; ref->p = &zplst;}
 	  |	_Instance Property
 		{if(bug>3)fprintf(Error,"  _Instance Property: '%s'='%s'\n", $2->s, $2->nxt->s);
 		if( !strcmp($2->s, "PIN_NAMES_VISIBLE")  && !strcmp($2->nxt->s,"False"))
@@ -1503,6 +1508,11 @@ _Instance :	ViewRef
 
 		if( !strcmp($2->s, "PCB_FOOTPRINT") )
 		   strncpy(Foot, $2->nxt->s, FOOT_NAME_LEN);  
+
+		if( !strcmp($2->s, "VALUE") ){
+		   val = &valI; val->p = &zplst;
+		   val->s = strdup($2->nxt->s);  
+                }
 		}
 	  |	_Instance Comment
 	  |	_Instance UserData
@@ -2434,7 +2444,7 @@ PortNameDef :	NameDef
                     New->U.Pin.PinShape = NONE;		// NONE, DOT, CLOCK, SHORT
 		    New->U.Pin.PinType  = PIN_UNSPECIFIED;
 		    New->U.Pin.Orient   = 0;
-                    New->U.Pin.Flags    = 1;           	// Pin InVisible no port property in OrCad Ver 10
+                    New->U.Pin.Flags    = 0;           	// Pin Visible no port property in OrCad Ver 10
                     New->U.Pin.SizeNum  = TextSize;
                     New->U.Pin.SizeName = TextSize;
 		    New->U.Pin.Num[0]='0'; New->U.Pin.Num[4]=0;
@@ -2495,9 +2505,9 @@ _Port :		PortNameDef
 			New->U.Pin.PinShape |= INVERT;
 		    if( !strcmp($2->s, "LONG")  && !strcmp($2->nxt->s, "False") )
                     	New->U.Pin.Len = 100;
-		    if( !strcmp($2->s, "PIN_32_NUMBER_32_IS_32_VISIBLE") && !strcmp($2->nxt->s, "True") ){
+		    if( !strcmp($2->s, "PIN_32_NUMBER_32_IS_32_VISIBLE") && !strcmp($2->nxt->s, "False") ){
 			// LibEntry->DrawPinNum = 1;
-                    	New->U.Pin.Flags = 0;  // set Visible
+                    	New->U.Pin.Flags = 1;  // set InVisible
 		    }
 		}
       |		_Port Comment
@@ -2736,7 +2746,7 @@ Property  :	PROPERTY PropNameDef _Property PopC
 			New->U.Pin.PinShape = NONE;         // NONE, DOT, CLOCK, SHORT
 			New->U.Pin.PinType  = PIN_POWER;
 			New->U.Pin.Orient   = PIN_UP;
-			New->U.Pin.Flags    = 1;            /* Pin InVisible */
+			New->U.Pin.Flags    = 0;            /* Pin Visible */
 			New->U.Pin.SizeNum  = TextSize;
 			New->U.Pin.SizeName = TextSize;
 			New->U.Pin.ReName = NULL;
@@ -2803,12 +2813,9 @@ _RangeVector :
 	     ;
 
 Rectangle :	RECTANGLE PointValue _Rectangle PopC
-		{
-		// for e2lib
-                LibEntry->BBoxMinX = $2->x *1;
-                LibEntry->BBoxMaxX = $3->x *1;
-                LibEntry->BBoxMinY = $2->y *1;
-                LibEntry->BBoxMaxY = $3->y *1;
+		{ 
+		 if(bug>2)fprintf(Error,"      RECTANGLE [%d %d][%d %d]\n", $2->x, $2->y, $3->x, $3->y); 
+		 $$=$2; $$->nxt=$3;
 		}
 	  ;
 
@@ -3304,6 +3311,11 @@ _View :		Interface
 		    if( strstr($2->s, "PAGEBORDER") !=NULL || strstr($2->s, "TITLEBLOCK") !=NULL ) {
 		        strcpy(fname, LibEntry->Prefix);
 		        sprintf(LibEntry->Prefix, "#%s", fname);
+			if(bug>3)fprintf(Error,"  PAGEBORDER [%d %d][%d %d]\n",$2->p->x, $2->p->y, $2->p->nxt->x, $2->p->nxt->y );
+                	LibEntry->BBoxMinX = $2->p->x *1;
+                	LibEntry->BBoxMinY = $2->p->y *1;
+                	LibEntry->BBoxMaxX = $2->p->nxt->x *1;
+                	LibEntry->BBoxMaxY = $2->p->nxt->y *1;
 		    }
 		    if( strstr($2->s, "POWER") !=NULL )
 		        strcpy(LibEntry->Prefix, "#PWR");
@@ -3581,7 +3593,7 @@ if( cur_pnam != NULL ){
                      New->U.Pin.PinShape = NONE;         // NONE, DOT, CLOCK, SHORT
                      New->U.Pin.PinType  = PIN_POWER;
                      New->U.Pin.Orient   = PIN_UP;
-                     New->U.Pin.Flags    = 1;            /* Pin INVisible */
+                     New->U.Pin.Flags    = 0;            /* Pin Visible */
                      New->U.Pin.SizeNum  = TextSize;
                      New->U.Pin.SizeName = TextSize;
                      New->U.Pin.Name     = strdup(cur_pnam);
