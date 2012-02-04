@@ -36,7 +36,10 @@ main()
 
 	case '\r':
 	case '\n':
-	    continue;
+		if(instr)
+	    	continue;
+	    ch=' ';
+		break;
 	case ' ':
 	case '\t':
 	    if(wh || last=='(')
