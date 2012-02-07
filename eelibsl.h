@@ -13,9 +13,10 @@
 
 #define BooleanType char
 
-#define PART_NAME_LEN	25		/* Maximum length of part name. */
+// TODO get rid of PART_NAME_LEN, use char * && strncpy
+#define PART_NAME_LEN	64		/* Maximum length of part name. */
 #define PREFIX_NAME_LEN	5		/* Maximum length of prefix (IC, R, SW etc.). */
-#define FOOT_NAME_LEN	25		/* Maximum length of footprint name. */
+#define FOOT_NAME_LEN	40		/* Maximum length of footprint name. */
 #define PIN_SEPERATOR	"\n"	/* See Pins in LibraryEntryStruct. */
 #define FILE_IDENT "EESchema-LIBRARY Version 2.0"  /* Must be at the lib file start. */
 #define PIN_WIDTH	100			   /* Width between 2 pins in internal units. */
@@ -99,10 +100,10 @@ typedef struct LibraryFieldEntry	/* Fields auxiliaires identiques aux fields
 /* Structures de dessin des composants : */
 
 typedef struct LibraryAliasStruct {
-	LibrEntryType Type;				/* Type = ALIAS pour cette struct */
+	LibrEntryType Type;						/* Type = ALIAS pour cette struct */
 	char Name[PART_NAME_LEN + 1];			/* Alias Part name. */
 	char RootName[PART_NAME_LEN + 1];		/* Part name pour le composant de reference */
-	struct LibraryEntryStruct * RootEntry;			/* Pointeur sur le composant de ref */
+	struct LibraryEntryStruct * RootEntry;	/* Pointeur sur le composant de ref */
 } LibraryAliasStruct;
 
 typedef enum {
@@ -191,6 +192,7 @@ typedef struct LibraryEntryStruct {
 
 typedef struct LibraryStruct {
 	char 		*Name;			/* Name of library loaded. */
+	int			isSheet;
 	int 		NumOfParts;		/* Number of parts this library has. */
 	struct LibraryEntryStruct *Entries;	/* Parts themselves are saved here. */
 	struct LibraryStruct *nxt;		/* Point on next lib in chain. */

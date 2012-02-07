@@ -26,6 +26,8 @@ main(int argc, char *argv[])
 {
   char * version      = "0.97";
   char * progname;
+  extern int nPages;
+  extern struct pwr  *pgs;
 
   progname = strrchr(argv[0],'/');
   if (progname)
@@ -45,25 +47,28 @@ main(int argc, char *argv[])
        return(-1);
   }
 
-  Libs=NULL;
+  Libs=NULL; strcpy(schName,"");
   fprintf(stderr, "Parsing %s & writing .sch file\n", InFile);
   ParseEDIF(FileEdf, stderr);
 
-  fprintf(stderr, "Writting Libs \n");
-  for( ; Libs != NULL; Libs = Libs->nxt ){
-        sprintf(FileNameLib,"%s.lib", Libs->Name);
-        if( (FileLib = fopen( FileNameLib, "wt" )) == NULL ) {
-            printf( " %s impossible a creer\n", FileNameLib);
-            return(-1);
-        }
-        fprintf(stderr," writing %s %d parts\n", FileNameLib, Libs->NumOfParts);
-        SaveActiveLibrary(FileLib, Libs );
-        fclose(FileLib);
+  fprintf(stderr, "\n%s Libs -> cache <<<<\n", progname);
+  sprintf(FileNameLib,"%s.cache.lib", schName);
+  if( (FileLib = fopen( FileNameLib, "wt" )) == NULL ) {
+	 printf( " %s impossible too create\n", FileNameLib);
+     return(-1);
   }
+  OutLibHead(FileLib, Libs );
+
+  for( ; Libs != NULL; Libs = Libs->nxt ){
+	fprintf(stderr, " Lib:%s %s\n", Libs->Name, schName);
+		SaveActiveLibrary(FileLib, Libs );
+  }
+  OutLibEnd(FileLib); 
 
   pass2++;
 //  freopen(InFile, "rt", FileEdf);
 
+  fprintf(stderr, " %d Pages\n",nPages);
   fprintf(stderr, " BonJour\n");
   return(0);
 }

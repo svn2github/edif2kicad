@@ -3,28 +3,33 @@
 	/************************/
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "ed.h"
 #include "eelibsl.h"
 
 #define TEXT_SIZE 60
-FILE * FileEdf, * FileNet, * FileEESchema, * FileKiPro ;
+FILE *FileEdf, *FileNet, *FileEESchema, *FileKiPro ;
+extern char FileNameKiPro[], FileNameEESchema[], FileNameLib[];
+extern float scale;
+char *cwd;
 
 OutPro(LibraryStruct * Libs)
 {
-  extern char FileNameKiPro[];
   int i;
+  cwd = (char *)get_current_dir_name();
 
   sprintf(FileNameKiPro,"%s.pro", schName);
   if( (FileKiPro = fopen( FileNameKiPro, "wt" )) == NULL ) {
-       fprintf(stderr, " %s impossible a creer\n", FileNameKiPro);
+       fprintf(stderr, " %s impossible to create\n", FileNameKiPro);
        return(-1);
   }
   fprintf(FileKiPro,"update=16/11/2007-20:11:59\n");
   fprintf(FileKiPro,"last_client=eeschema\n");
   fprintf(FileKiPro,"[eeschema]\n");
   fprintf(FileKiPro,"version=1\n");
-  fprintf(FileKiPro,"LibDir=%s\n", "."); // system("pwd"));
+  //fprintf(FileKiPro,"LibDir=%s\n", cwd ); //"."
+  fprintf(FileKiPro,"LibDir=\n"); //"."
   fprintf(FileKiPro,"NetFmt=1\n");
   fprintf(FileKiPro,"HPGLSpd=20\n");
   fprintf(FileKiPro,"HPGLDm=15\n");
@@ -48,30 +53,34 @@ OutPro(LibraryStruct * Libs)
   fprintf(FileKiPro,"[eeschema/libraries]\n");
 
   for( i=1; Libs != NULL; i++, Libs = Libs->nxt ){
+	if( !Libs->isSheet )
       fprintf(FileKiPro, "LibName%d=%s\n", i, Libs->Name);
   }
 }
 
 OutHead(LibraryStruct *Libs)
 {
-  extern char FileNameEESchema[];
-
+  OutEnd(); // close if previous open
+	
   sprintf(FileNameEESchema,"%s.sch", schName);
   if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
-       fprintf(stderr, " %s impossible a creer\n", FileNameEESchema);
+       fprintf(stderr, " %s impossible to create\n", FileNameEESchema);
        return(-1);
   }
 
-  fprintf(stderr,"Write %s\n", FileNameEESchema);
+  if( bug>2)fprintf(stderr,"OutHead %s\n", FileNameEESchema);
 
-  fprintf(FileEESchema,"EESchema Schematic File Version 1\n");
+  fprintf(FileEESchema,"EESchema Schematic File Version 2 ");
+  fprintf(FileEESchema,"date Mon 06 Feb 2012 06:45:22 PM MST\n");
   fprintf(FileEESchema,"LIBS:");
-  for( ; Libs != NULL; Libs = Libs->nxt ){
-      fprintf(FileEESchema, "%s,", Libs->Name);
-  }
-  fprintf(FileEESchema,"\nEELAYER 0 0\nEELAYER END\n");
+  //for( ; Libs != NULL; Libs = Libs->nxt ){
+  //if( !Libs->isSheet )
+  //  fprintf(FileEESchema, "%s,", Libs->Name);
+  //}
+  fprintf(FileEESchema,"\nEELAYER 24 0\nEELAYER END\n");
 
-  fprintf(FileEESchema,"$Descr B 17000 11000\n");
+  fprintf(FileEESchema,"$Descr D 34000 22000\n"); // TODO - get size from EDIF
+
   fprintf(FileEESchema,"Sheet 1 1\n");
   fprintf(FileEESchema,"Title \"\"\n");
   fprintf(FileEESchema,"Date \"15 oct 2007\"\n");
@@ -91,34 +100,39 @@ OutEnd()
 {
   if(FileEESchema == NULL)
      return;
+  if( bug>2)fprintf(stderr,"OutEnd %s\n", FileNameEESchema);
   fprintf(FileEESchema,"$EndSCHEMATC\n");
   fclose(FileEESchema);
 }
 
 OutSheets(struct pwr *pgs)
 {
-  int x;
+  int x, y;
 
   if(FileEESchema == NULL)
      return;
-  for( x=800 ; pgs != NULL ; pgs=pgs->nxt, x += 1200 ) {
+  for( x=800,y=800 ; pgs != NULL ; pgs=pgs->nxt ) {
     fprintf(FileEESchema, "$Sheet\n");
-    fprintf(FileEESchema, "S %d  800  900  2100\n", x);
+    fprintf(FileEESchema, "S %d  %d  900  2100\n", x,y);
     fprintf(FileEESchema, "U %d\n", x);
     fprintf(FileEESchema, "F0 \"%s\" 60\n", pgs->s);
     fprintf(FileEESchema, "F1 \"%s.sch\" 60\n", pgs->s);
     fprintf(FileEESchema, "$EndSheet\n\n");
+	x += 3000;
+    if( x>15000 ){
+		y += 3000;
+		x  = 800;
+	}
   }
 }
 
-// #define OFF 500
 #define OFF 0
+
 OutText(g,s,x,y,size)
 char *s;
 int   g, x,y;
 {
   int fx, fy, fs;
-  extern float scale;
 
   fx = OFF + scale * (float)x; fy = OFF + scale * (float)y;
   fs = 0.55*scale * (float)size;  // fixme - fwb
@@ -127,7 +141,7 @@ int   g, x,y;
   if(g)
     fprintf(FileEESchema,"Text GLabel %d %d 0 %d UnSpc\n%s\n",fx,fy,fs,s);
   else
-    fprintf(FileEESchema,"Text Label %d %d 0 %d ~\n%s\n",fx,fy,fs,s);
+    fprintf(FileEESchema,"Text Label %d %d 0 %d ~ 0\n%s\n",fx,fy,fs,s);
   fflush(FileEESchema);
 }
 
@@ -135,7 +149,6 @@ OutWire(x1,y1,x2,y2)
 int x1,y1,x2,y2;
 {
   int fx1, fy1, fx2, fy2;
-  extern float scale;
 
   fx1 = OFF + scale * (float)x1; fy1 = OFF + scale * (float)y1;
   fx2 = OFF + scale * (float)x2; fy2 = OFF + scale * (float)y2;
@@ -148,7 +161,6 @@ int x1,y1,x2,y2;
 OutConn(ox,oy)
 int ox, oy;
 {
-extern float scale;
 int fx, fy;
 
   if(FileEESchema == NULL)
@@ -161,7 +173,6 @@ OutInst(reflib, refdes, value, foot, ts, ox, oy, rx, ry, vx, vy, rflg, vflg, Rot
 char *reflib, *refdes, *value, *foot;
 int ts, ox, oy, rx, ry, vx, vy, Rot[2][2], rflg, vflg;
 {
-extern float scale;
 
 /* example
 $Comp
@@ -176,6 +187,7 @@ F 2 "TO220" H 5950 9200 60  0000 C C
         1    0    0    -1
 $EndComp
 */
+
 int fts, fx, fy, frx, fry, fvx, fvy;
 
   fts = 0.6 * scale * (float) ts;
@@ -190,11 +202,11 @@ int fts, fx, fy, frx, fry, fvx, fvy;
   fprintf(FileEESchema,"U %d %d %8.8lX\n", 1, 1, 0l);
   fprintf(FileEESchema,"P %d %d\n", fx, fy);
 if(refdes != NULL){
-  fprintf(FileEESchema,"F 0 \"%s\" %c %d %d %d 000%d L T\n", refdes, Rot[0][1]?'V':'H',
+  fprintf(FileEESchema,"F 0 \"%s\" %c %d %d %d 000%d L TNN\n", refdes, Rot[0][1]?'V':'H',
 			frx, (3*fy-2*fry), fts, rflg);
 }
 if(value != NULL){
-  fprintf(FileEESchema,"F 1 \"%s\" %c %d %d %d 000%d L T\n", value,  Rot[0][1]?'V':'H',
+  fprintf(FileEESchema,"F 1 \"%s\" %c %d %d %d 000%d L TNN\n", value,  Rot[0][1]?'V':'H',
 			fvx, (3*fy-2*fvy), fts, vflg);
 }
 if(foot != NULL && foot[0] != 0) {
@@ -220,20 +232,28 @@ static int WriteOneLibEntry(FILE * ExportFile, LibraryEntryStruct * LibEntry);
 
 /* Variables locales */
 
+void OutLibHead(FILE *SaveFile, LibraryStruct *CurrentLib )
+{
 
+    if( bug>2)fprintf(stderr," OutLibHead %s\n", CurrentLib->Name);
+	fprintf(SaveFile,"%s\n", FILE_IDENT);
+	fprintf(SaveFile,"### Library: %s ###\n", CurrentLib->Name);
+}
 
+void OutLibEnd(FILE *SaveFile)
+{
+    if( bug>2)fprintf(stderr," OutLibEnd %s\n", CurrentLib->Name);
+	fprintf(SaveFile,"#End Library\n");
+	fclose(SaveFile);
+}
 /**************************************************************************/
 /* void SaveActiveLibrary(FILE * SaveFile, LibraryEntryStruct *LibEntry ) */
 /**************************************************************************/
 
-void SaveActiveLibrary(FILE * SaveFile, LibraryStruct *CurrentLib )
+void SaveActiveLibrary(FILE *SaveFile, LibraryStruct *CurrentLib )
 {
 LibraryEntryStruct *LibEntry;
 int ii;
-
-	/* Creation de l'entete de la librairie */
-	fprintf(SaveFile,"%s Version 1.0\n", FILE_IDENT);
-	fprintf(SaveFile,"### Library: %s ###\n", CurrentLib->Name);
 
 	LibEntry = (LibraryEntryStruct *) CurrentLib->Entries;
 	for( ii = CurrentLib->NumOfParts ; ii > 0; ii-- ) {
@@ -245,7 +265,6 @@ int ii;
 		LibEntry = (LibraryEntryStruct *) LibEntry->nxt;
 		}
 
-	fprintf(SaveFile,"#End Library\n");
 }
 
 
@@ -270,7 +289,6 @@ int ii, t1, t2, Etype;
 char PinNum[5];
 char FlagXpin = 0;
 int x1,y1,x2,y2,r;
-extern float scale;
 
 	if( LibEntry->Type != ROOT ) return(1);
 
