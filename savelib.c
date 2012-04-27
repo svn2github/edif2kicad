@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <malloc.h>
 
 #include "ed.h"
 #include "eelibsl.h"
@@ -90,7 +91,7 @@ OutHead(LibraryStruct *Libs)
   fprintf(FileEESchema,"Comment2 \"\"\n");
   fprintf(FileEESchema,"Comment3 \"\"\n");
   fprintf(FileEESchema,"Comment4 \"\"\n");
-  fprintf(FileEESchema,"$EndDescr\n\n");
+  fprintf(FileEESchema,"$EndDescr\n");
   fflush(FileEESchema);
 
   return 1;
@@ -111,17 +112,18 @@ OutSheets(struct pwr *pgs)
 
   if(FileEESchema == NULL)
      return;
-  for( x=800,y=800 ; pgs != NULL ; pgs=pgs->nxt ) {
+  for( x=1000,y=800 ; pgs != NULL ; pgs=pgs->nxt ) {
     fprintf(FileEESchema, "$Sheet\n");
-    fprintf(FileEESchema, "S %d  %d  900  2100\n", x,y);
+    fprintf(FileEESchema, "S %d  %d  900  1500\n", x,y);
     fprintf(FileEESchema, "U %d\n", x);
     fprintf(FileEESchema, "F0 \"%s\" 60\n", pgs->s);
     fprintf(FileEESchema, "F1 \"%s.sch\" 60\n", pgs->s);
-    fprintf(FileEESchema, "$EndSheet\n\n");
-	x += 3000;
+    fprintf(FileEESchema, "$EndSheet\n");
+	x += 4000;
+	y +=  200;
     if( x>15000 ){
-		y += 3000;
-		x  = 800;
+		y += 1500;
+		x  = 1000;
 	}
   }
 }
@@ -133,16 +135,38 @@ char *s;
 int   g, x,y;
 {
   int fx, fy, fs;
+  char *st, *t=malloc(strlen(s)+1);
 
+  if( s==NULL || *s==0 )
+	return;
+  // fprintf(stderr,"OutText %s %d %0x %0x\n", s, strlen(s), (unsigned int)s, (unsigned int)t);
+  // modify bus range
+  for( st=s ;  ; s++,t++ ){
+	if(*s == ':'){
+		*t++ = '.'; *t = '.'; 
+	}else
+		*t = *s;
+	if(*s == '\0')
+		break;
+  }
+  // if s[0] == '[' assume sheet_to_sheet reference change to {1,2,5}
+  if( st[0] == '[' ) {
+	st[0] = '{';
+	for( t=st; *t ; t++){
+	  if( *t == ']' )
+		*t = '}'; 
+    }
+  }
   fx = OFF + scale * (float)x; fy = OFF + scale * (float)y;
   fs = 0.55*scale * (float)size;  // fixme - fwb
   if(FileEESchema == NULL)
      return;
   if(g)
-    fprintf(FileEESchema,"Text GLabel %d %d 0 %d UnSpc\n%s\n",fx,fy,fs,s);
+    fprintf(FileEESchema,"Text GLabel %d %d 0 %d UnSpc\n%s\n",fx,fy,fs,st);
   else
-    fprintf(FileEESchema,"Text Label %d %d 0 %d ~ 0\n%s\n",fx,fy,fs,s);
+    fprintf(FileEESchema,"Text Label %d %d 0 %d ~ 0\n%s\n",fx,fy,fs,st);
   fflush(FileEESchema);
+  free(st);
 }
 
 OutWire(x1,y1,x2,y2)
@@ -169,8 +193,8 @@ int fx, fy;
   fprintf(FileEESchema,"Connection ~ %d %d\n", fx, fy);
 }
 
-OutInst(reflib, refdes, value, foot, ts, ox, oy, rx, ry, vx, vy, rflg, vflg, Rot)
-char *reflib, *refdes, *value, *foot;
+OutInst(reflib, refdes, value, foot, mfgname, mfgpart, ts, ox, oy, rx, ry, vx, vy, rflg, vflg, Rot)
+char *reflib, *refdes, *value, *foot, *mfgname, *mfgpart;
 int ts, ox, oy, rx, ry, vx, vy, Rot[2][2], rflg, vflg;
 {
 
@@ -190,6 +214,7 @@ $EndComp
 
 int fts, fx, fy, frx, fry, fvx, fvy;
 
+  scale =1.0; //fwb
   fts = 0.6 * scale * (float) ts;
   fx  = OFF + scale * (float) ox; fy  = OFF + scale * (float) oy;
   frx = OFF + scale * (float) rx; fry = OFF + scale * (float) ry;
@@ -211,6 +236,12 @@ if(value != NULL){
 }
 if(foot != NULL && foot[0] != 0) {
   fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001 L T\n", foot, fx+50, fy+50, fts);
+}
+if(mfgname != NULL && mfgname[0] != 0) {
+  fprintf(FileEESchema,"F 4 \"%s\" H %d %d %d 0001 L T\n", mfgname, fx+50, fy+50, fts);
+}
+if(mfgpart != NULL && mfgpart[0] != 0) {
+  fprintf(FileEESchema,"F 5 \"%s\" H %d %d %d 0001 L T\n", mfgpart, fx+50, fy+50, fts);
 }
   fprintf(FileEESchema,"  1 %d %d\n", fx, fy);
   fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0][0], Rot[0][1], Rot[1][0], Rot[1][1]);
@@ -256,15 +287,17 @@ LibraryEntryStruct *LibEntry;
 int ii;
 
 	LibEntry = (LibraryEntryStruct *) CurrentLib->Entries;
-	for( ii = CurrentLib->NumOfParts ; ii > 0; ii-- ) {
+	ii = CurrentLib->NumOfParts ; 
+	fprintf(stderr, "%03d #parts %s\n", ii, CurrentLib->Name);
+	for(  ; ii > 0; ii-- ) {
 		if(LibEntry != NULL) {
 			WriteOneLibEntry(SaveFile, LibEntry);
 			fprintf(SaveFile,"#\n");
-			}
-		else break;
-		LibEntry = (LibraryEntryStruct *) LibEntry->nxt;
+		} else {
+			break;
 		}
-
+		LibEntry = (LibraryEntryStruct *) LibEntry->nxt;
+	}
 }
 
 
@@ -276,7 +309,7 @@ int ii;
 	dans le fichier ExportFile( qui doit etre deja ouvert)
 	return: 0 si Ok
 			-1 si err write
-			1 si composant non ecrit ( type ALIAS )
+ 			 1 si composant non ecrit ( type ALIAS )
 */
 #define UNUSED 0
 int WriteOneLibEntry(FILE * ExportFile, LibraryEntryStruct * LibEntry)
@@ -293,12 +326,13 @@ int x1,y1,x2,y2,r;
 	if( LibEntry->Type != ROOT ) return(1);
 
 	/* Creation du commentaire donnant le nom du composant */
+	fprintf(stderr,"   %s\n", LibEntry->Name);
 	fprintf(ExportFile,"# %s\n#\n", LibEntry->Name);
 
 	/* Generation des lignes utiles */
 	fprintf(ExportFile,"DEF");
 	if(LibEntry->DrawName) fprintf(ExportFile," %s",LibEntry->Name);
-	else 		       fprintf(ExportFile," ~%s",LibEntry->Name);
+	else 			       fprintf(ExportFile," ~%s",LibEntry->Name);
 
 	if(LibEntry->Prefix[0] > ' ') fprintf(ExportFile," %s",LibEntry->Prefix);
 	else fprintf(ExportFile," ~");
@@ -318,8 +352,8 @@ int x1,y1,x2,y2,r;
 				LibEntry->PrefixOrient == 0 ? 'H' : 'V',
 				LibEntry->DrawPrefix ? 'V' : 'I' );
 
-        x1 = scale*(float)LibEntry->NamePosX; 
-        y1 = scale*(float)LibEntry->NamePosY; 
+    x1 = scale*(float)LibEntry->NamePosX; 
+    y1 = scale*(float)LibEntry->NamePosY; 
 	fprintf(ExportFile,"F1 \"%s\" %d %d %d %c %c\n",
 				LibEntry->Name,
 				x1, y1,
@@ -327,8 +361,7 @@ int x1,y1,x2,y2,r;
 				LibEntry->NameOrient == 0 ? 'H' : 'V',
 				LibEntry->DrawName ? 'V' : 'I' );
 
-	for ( Field = LibEntry->Fields; Field!= NULL; Field = Field->nxt )
-		{
+	for ( Field = LibEntry->Fields; Field!= NULL; Field = Field->nxt ) {
 		if( Field->Text == NULL ) continue;
 		if( strlen(Field->Text) == 0 ) continue;
         	x1 = scale*(float)Field->PosX;
@@ -340,7 +373,7 @@ int x1,y1,x2,y2,r;
 				(int)scale*Field->Size,
 				Field->Orient == 0 ? 'H' : 'V',
 				(Field->Flags & TEXT_NO_VISIBLE) ? 'I' : 'V' );
-		}
+	}
 
 	/* Sauvegarde de la ligne "ALIAS" */
 	if( LibEntry->AliasList )
@@ -349,13 +382,10 @@ int x1,y1,x2,y2,r;
 
 	/* Sauvegarde des elements de trace */
 	DrawEntry = LibEntry->Drawings;
-	if(DrawEntry)
-		{
+	if(DrawEntry) {
 		fprintf(ExportFile,"DRAW\n");
-		while( DrawEntry )
-			{
-			switch( DrawEntry->DrawType)
-				{
+		while( DrawEntry ) {
+			switch( DrawEntry->DrawType) {
 				case ARC_DRAW_TYPE:
 					#define DRAWSTRUCT     (&(DrawEntry->U.Arc))
 					t1 = DRAWSTRUCT->t1 - 1; if(t1 > 1800) t1 -= 3600;
@@ -483,13 +513,11 @@ int x1,y1,x2,y2,r;
 
 				default: DisplayError( "Save Lib: Unknown Draw Type");
 					break;
-				}
-
-			DrawEntry = DrawEntry->nxt;
 			}
-		fprintf(ExportFile,"ENDDRAW\n");
+			DrawEntry = DrawEntry->nxt;
 		}
-
+		fprintf(ExportFile,"ENDDRAW\n");
+	}
 	fprintf(ExportFile,"ENDDEF\n");
 
 	return(0);

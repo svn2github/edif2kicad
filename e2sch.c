@@ -8,7 +8,7 @@
 #include "ed.h"
 #include "eelibsl.h"
 
-int bug=2;  		// debug level: 
+int bug=3;  		// debug level: 
 int yydebug=0;
 
 char *InFile = "-";
@@ -60,8 +60,8 @@ main(int argc, char *argv[])
   OutLibHead(FileLib, Libs );
 
   for( ; Libs != NULL; Libs = Libs->nxt ){
-	fprintf(stderr, " Lib:%s %s\n", Libs->Name, schName);
-		SaveActiveLibrary(FileLib, Libs );
+	//fprintf(stderr, " Lib:%s %s\n", Libs->Name, schName);
+	SaveActiveLibrary(FileLib, Libs );
   }
   OutLibEnd(FileLib); 
 

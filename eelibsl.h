@@ -17,6 +17,8 @@
 #define PART_NAME_LEN	64		/* Maximum length of part name. */
 #define PREFIX_NAME_LEN	5		/* Maximum length of prefix (IC, R, SW etc.). */
 #define FOOT_NAME_LEN	40		/* Maximum length of footprint name. */
+#define MFG_NAME_LEN	30		/* Maximum length of manufacture name. */
+#define MFG_PART_LEN	40		/* Maximum length of manf part name. */
 #define PIN_SEPERATOR	"\n"	/* See Pins in LibraryEntryStruct. */
 #define FILE_IDENT "EESchema-LIBRARY Version 2.0"  /* Must be at the lib file start. */
 #define PIN_WIDTH	100			   /* Width between 2 pins in internal units. */
@@ -174,11 +176,11 @@ typedef struct LibraryDrawEntryStruct {
 } LibraryDrawEntryStruct;
 
 typedef struct LibraryEntryStruct {
-	LibrEntryType Type;				/* Type = ROOT;
-							   = ALIAS pour struct LibraryAliasType */
+	LibrEntryType Type;						/* Type = ROOT;
+							   					    = ALIAS pour struct LibraryAliasType */
 	char Name[PART_NAME_LEN + 1];			/* Part name. */
 	char Prefix[PREFIX_NAME_LEN + 1];		/* Prefix ( U, IC ... ) */
-	char * AliasList;				/* Pointeur sur la liste des ALIAS de ce composant */
+	char * AliasList;						/* Pointeur sur la liste des ALIAS de ce composant */
 	int NamePosX,   NamePosY,   NameOrient,   NameSize;
 	int PrefixPosX, PrefixPosY, PrefixOrient, PrefixSize;
 	int NumOfUnits;
@@ -191,11 +193,11 @@ typedef struct LibraryEntryStruct {
 } LibraryEntryStruct;
 
 typedef struct LibraryStruct {
-	char 		*Name;			/* Name of library loaded. */
+	char 		*Name;					/* Name of library loaded. */
 	int			isSheet;
-	int 		NumOfParts;		/* Number of parts this library has. */
+	int 		NumOfParts;				/* Number of parts this library has. */
 	struct LibraryEntryStruct *Entries;	/* Parts themselves are saved here. */
-	struct LibraryStruct *nxt;		/* Point on next lib in chain. */
+	struct LibraryStruct *nxt;			/* Point on next lib in chain. */
 } LibraryStruct;
 
 global LibraryStruct          	*Libs,  *CurrentLib, *DesignName, *LSptr;

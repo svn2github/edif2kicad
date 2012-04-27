@@ -1,5 +1,19 @@
-change_log.txt
+FILE: change_log.txt
 
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2012-Apr-27 fwb
+	-EDIF added OrCad test/openrd.edf & test/OPENRD_16-00050-02.pdf files
+		-See OpenRD.org - Open Reference Designs
+		-Marvel Sheeva 88F6281 ARM SOC, USB, DDR2, PCIe, SATA
+		-multiple sheet symbol (netlister gives warning for
+			multiple U1 - sheet 2,3,4,6) need to fix netlister
+	-sheet ref [1,2,3] -> {1,2,3} (not bus members)
+ 	-bus range DDR2[15:0] ->DDR2[15..0]
+	-pickup footprint, manufacture and MFG part number
+TODO fixme
+	-PARTSVALUE coordinates are wild
+	-get rid of all the ANNOTATION "COMMENT" OutText
+	-PORT LEFT,RIGHT,BOTH oxy s/b 0,0 not PWR symbols
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2008-Apr-28 fwb
 	fix sig segv for eample/X375D_VER72.EDF
