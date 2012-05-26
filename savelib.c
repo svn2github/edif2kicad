@@ -1,6 +1,6 @@
-	/************************/
-	/*	savelib.cc	*/
-	/************************/
+/************************/
+/*	savelib.cc	*/
+/************************/
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -20,7 +20,7 @@ OutPro(LibraryStruct * Libs)
   int i;
   cwd = (char *)get_current_dir_name();
 
-  sprintf(FileNameKiPro,"%s.pro", schName);
+  sprintf(FileNameKiPro,"%s.pro", fName);
   if( (FileKiPro = fopen( FileNameKiPro, "wt" )) == NULL ) {
        fprintf(stderr, " %s impossible to create\n", FileNameKiPro);
        return(-1);
@@ -59,25 +59,21 @@ OutPro(LibraryStruct * Libs)
   }
 }
 
-OutHead(LibraryStruct *Libs)
+OpenSch()
 {
-  OutEnd(); // close if previous open
+  CloseSch(); // close if previous open
 	
-  sprintf(FileNameEESchema,"%s.sch", schName);
+  sprintf(FileNameEESchema,"%s.sch", fName);
   if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
        fprintf(stderr, " %s impossible to create\n", FileNameEESchema);
        return(-1);
   }
 
-  if( bug>2)fprintf(stderr,"OutHead %s\n", FileNameEESchema);
+  if( bug>0)fprintf(stderr,"OpenSch %s\n", FileNameEESchema);
 
   fprintf(FileEESchema,"EESchema Schematic File Version 2 ");
   fprintf(FileEESchema,"date Mon 06 Feb 2012 06:45:22 PM MST\n");
   fprintf(FileEESchema,"LIBS:");
-  //for( ; Libs != NULL; Libs = Libs->nxt ){
-  //if( !Libs->isSheet )
-  //  fprintf(FileEESchema, "%s,", Libs->Name);
-  //}
   fprintf(FileEESchema,"\nEELAYER 24 0\nEELAYER END\n");
 
   fprintf(FileEESchema,"$Descr D 34000 22000\n"); // TODO - get size from EDIF
@@ -97,20 +93,23 @@ OutHead(LibraryStruct *Libs)
   return 1;
 }
 
-OutEnd()
+CloseSch()
 {
-  if(FileEESchema == NULL)
+  if(FileEESchema == 0)
      return;
-  if( bug>2)fprintf(stderr,"OutEnd %s\n", FileNameEESchema);
+  if( bug>0)fprintf(stderr,"CloseSch %s\n", FileNameEESchema);
+
   fprintf(FileEESchema,"$EndSCHEMATC\n");
+  fflush(FileEESchema);
   fclose(FileEESchema);
+  FileEESchema=0;
 }
 
 OutSheets(struct pwr *pgs)
 {
   int x, y;
 
-  if(FileEESchema == NULL)
+  if(FileEESchema == 0)
      return;
   for( x=1000,y=800 ; pgs != NULL ; pgs=pgs->nxt ) {
     fprintf(FileEESchema, "$Sheet\n");
@@ -132,22 +131,26 @@ OutSheets(struct pwr *pgs)
 
 OutText(g,s,x,y,size)
 char *s;
-int   g, x,y;
+int   g, x,y,size;
 {
-  int fx, fy, fs;
+  int fx, fy, fs, len;
   char *st, *t=malloc(strlen(s)+1);
 
   if( s==NULL || *s==0 )
 	return;
-  // fprintf(stderr,"OutText %s %d %0x %0x\n", s, strlen(s), (unsigned int)s, (unsigned int)t);
+
   // modify bus range
-  for( st=s ;  ; s++,t++ ){
+  for( st=t,len=0 ;  ; s++,t++,len++ ){
 	if(*s == ':'){
 		*t++ = '.'; *t = '.'; 
 	}else
 		*t = *s;
 	if(*s == '\0')
 		break;
+	if(len>20){
+		*t='\0';
+		break;
+	}
   }
   // if s[0] == '[' assume sheet_to_sheet reference change to {1,2,5}
   if( st[0] == '[' ) {
@@ -161,12 +164,22 @@ int   g, x,y;
   fs = 0.55*scale * (float)size;  // fixme - fwb
   if(FileEESchema == NULL)
      return;
-  if(g)
-    fprintf(FileEESchema,"Text GLabel %d %d 0 %d UnSpc\n%s\n",fx,fy,fs,st);
-  else
+  if(bug>1)fprintf(stderr,"  OutText%d %s '%s' (%d, %d) %d\n", 
+	g, ((g==0)?"D":((g==1)?"G":((g==2)?"D":(g==3)?"S":"?"))), st, x, y, size);
+  switch( g ) {
+  case 0:
+  case 2:
+  case 3:
     fprintf(FileEESchema,"Text Label %d %d 0 %d ~ 0\n%s\n",fx,fy,fs,st);
+	break;
+  case 1:
+    fprintf(FileEESchema,"Text GLabel %d %d 0 %d UnSpc\n%s\n",fx,fy,fs,st);
+	break;
+  default:
+	break;
+  }
   fflush(FileEESchema);
-  free(st);
+  //free(st);
 }
 
 OutWire(x1,y1,x2,y2)
@@ -193,11 +206,16 @@ int fx, fy;
   fprintf(FileEESchema,"Connection ~ %d %d\n", fx, fy);
 }
 
-OutInst(reflib, refdes, value, foot, mfgname, mfgpart, ts, ox, oy, rx, ry, vx, vy, rflg, vflg, Rot)
-char *reflib, *refdes, *value, *foot, *mfgname, *mfgpart;
-int ts, ox, oy, rx, ry, vx, vy, Rot[2][2], rflg, vflg;
+OutInst(refcell, refdes, value, foot, mfgname, mfgpart, ts, ox, oy, rx, ry, vx, vy, rflg, vflg, unit, Rot)
+char *refcell, *refdes, *value, *foot, *mfgname, *mfgpart;
+int ts, ox, oy, rx, ry, vx, vy, unit, rflg, vflg, Rot[4];
 {
-
+if(bug>1)fprintf(stderr,"  OutInst '%s' %d '%s' '%s' '%s' %s %s %d %d %d (%d, %d) (%d,%d) %d%d [%d %d %d %d]\n\n",
+                    refcell, unit, refdes, value, foot, mfgname, mfgpart, 
+					ts, ox, oy, rx, ry, vx,vy, rflg, vflg,	
+                    Rot[0], Rot[1], Rot[2], Rot[3] );
+if(strstr(refcell,"TITLE"))
+	return;
 /* example
 $Comp
 L 24C16 U1
@@ -214,37 +232,38 @@ $EndComp
 
 int fts, fx, fy, frx, fry, fvx, fvy;
 
+  if(FileEESchema == NULL)
+     return;
+
   scale =1.0; //fwb
   fts = 0.6 * scale * (float) ts;
   fx  = OFF + scale * (float) ox; fy  = OFF + scale * (float) oy;
   frx = OFF + scale * (float) rx; fry = OFF + scale * (float) ry;
   fvx = OFF + scale * (float) vx; fvy = OFF + scale * (float) vy;
 
-  if(FileEESchema == NULL)
-     return;
   fprintf(FileEESchema, "$Comp\n");
-  fprintf(FileEESchema,"L %s %s\n", reflib, refdes );
-  fprintf(FileEESchema,"U %d %d %8.8lX\n", 1, 1, 0l);
+  fprintf(FileEESchema,"L %s %s\n", refcell, refdes );
+  fprintf(FileEESchema,"U %d %d %8.8lX\n", unit, 1, 0l);
   fprintf(FileEESchema,"P %d %d\n", fx, fy);
 if(refdes != NULL){
-  fprintf(FileEESchema,"F 0 \"%s\" %c %d %d %d 000%d L TNN\n", refdes, Rot[0][1]?'V':'H',
-			frx, (3*fy-2*fry), fts, rflg);
+  fprintf(FileEESchema,"F 0 \"%s\" %c %d %d %d 000%d L TNN\n", refdes, Rot[1]?'V':'H',
+			frx, fry, fts, rflg);
 }
-if(value != NULL){
-  fprintf(FileEESchema,"F 1 \"%s\" %c %d %d %d 000%d L TNN\n", value,  Rot[0][1]?'V':'H',
-			fvx, (3*fy-2*fvy), fts, vflg);
+if(value != NULL && strcmp(value,"")){
+  fprintf(FileEESchema,"F 1 \"%s\" %c %d %d %d 000%d L TNN\n", value,  Rot[1]?'V':'H',
+			fvx, fvy, fts, vflg);
 }
-if(foot != NULL && foot[0] != 0) {
-  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001 L T\n", foot, fx+50, fy+50, fts);
+if(foot != NULL && strcmp(foot,"")) {
+  fprintf(FileEESchema,"F 2 \"%s\" H %d %d %d 0001 L T\n", foot,    fx, fy-200, fts);
 }
 if(mfgname != NULL && mfgname[0] != 0) {
-  fprintf(FileEESchema,"F 4 \"%s\" H %d %d %d 0001 L T\n", mfgname, fx+50, fy+50, fts);
+  fprintf(FileEESchema,"F 4 \"%s\" H %d %d %d 0001 L T\n", mfgname, fx, fy-300, fts);
 }
 if(mfgpart != NULL && mfgpart[0] != 0) {
-  fprintf(FileEESchema,"F 5 \"%s\" H %d %d %d 0001 L T\n", mfgpart, fx+50, fy+50, fts);
+  fprintf(FileEESchema,"F 5 \"%s\" H %d %d %d 0001 L T\n", mfgpart, fx, fy-400, fts);
 }
-  fprintf(FileEESchema,"  1 %d %d\n", fx, fy);
-  fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0][0], Rot[0][1], Rot[1][0], Rot[1][1]);
+  fprintf(FileEESchema,"  %d %d %d\n", unit, fx, fy);
+  fprintf(FileEESchema,"    %d %d %d %d\n", Rot[0], Rot[1], Rot[2], Rot[3]);
   fprintf(FileEESchema,"$EndComp\n");
   fflush(FileEESchema);
 }
@@ -266,14 +285,14 @@ static int WriteOneLibEntry(FILE * ExportFile, LibraryEntryStruct * LibEntry);
 void OutLibHead(FILE *SaveFile, LibraryStruct *CurrentLib )
 {
 
-    if( bug>2)fprintf(stderr," OutLibHead %s\n", CurrentLib->Name);
+    if( bug>2)fprintf(stderr,"OutLibHead %s\n", CurrentLib->Name);
 	fprintf(SaveFile,"%s\n", FILE_IDENT);
 	fprintf(SaveFile,"### Library: %s ###\n", CurrentLib->Name);
 }
 
 void OutLibEnd(FILE *SaveFile)
 {
-    if( bug>2)fprintf(stderr," OutLibEnd %s\n", CurrentLib->Name);
+    if( bug>2)fprintf(stderr,"OutLibEnd %s\n", CurrentLib->Name);
 	fprintf(SaveFile,"#End Library\n");
 	fclose(SaveFile);
 }
@@ -326,7 +345,7 @@ int x1,y1,x2,y2,r;
 	if( LibEntry->Type != ROOT ) return(1);
 
 	/* Creation du commentaire donnant le nom du composant */
-	fprintf(stderr,"   %s\n", LibEntry->Name);
+	//fprintf(stderr,"   %s\n", LibEntry->Name);
 	fprintf(ExportFile,"# %s\n#\n", LibEntry->Name);
 
 	/* Generation des lignes utiles */

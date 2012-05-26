@@ -1,19 +1,40 @@
 FILE: change_log.txt
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2012-May-24 fwb
+	-properly generate multiple part symbols (unit)
+    -fix power symbols
+	- pickup missing netname text tags
+    - cleanup
+    - limit text strings to 20 characters (necessary??)
+	- honor PIN_32_NUMBERS_32_VISIBLE -> LibEntry->DrawPinNum
+	-comments displayed on wrong sheet
+
+TODO fixme
+	-test case is test/openrd.edf - lot of long text comments
+    -EEschema bug - symbol parts may not be sequential like A,B,C but (BAT54C, BAT54S)
+	-PARTSVALUE coordinates are wild
+	-convert %13 in wxStrings to CR/LF, does OpenGL handle this?
+	-String len currently set to 20, wxString len max?
+	-PORT orientation (0,90,180,270)
+	-sheet size
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 2012-Apr-27 fwb
 	-EDIF added OrCad test/openrd.edf & test/OPENRD_16-00050-02.pdf files
 		-See OpenRD.org - Open Reference Designs
 		-Marvel Sheeva 88F6281 ARM SOC, USB, DDR2, PCIe, SATA
 		-multiple sheet symbol (netlister gives warning for
-			multiple U1 - sheet 2,3,4,6) need to fix netlister
+			multiple U1 - sheet 2,3,4,6) need to fix EEschema netlister
 	-sheet ref [1,2,3] -> {1,2,3} (not bus members)
  	-bus range DDR2[15:0] ->DDR2[15..0]
 	-pickup footprint, manufacture and MFG part number
-TODO fixme
-	-PARTSVALUE coordinates are wild
-	-get rid of all the ANNOTATION "COMMENT" OutText
-	-PORT LEFT,RIGHT,BOTH oxy s/b 0,0 not PWR symbols
+
+testing
+	$make
+	$cd test
+	$../e2sch openrd.edf
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 2008-Apr-28 fwb
 	fix sig segv for eample/X375D_VER72.EDF

@@ -40,8 +40,11 @@
 
 	Tested under Linux and cygwin (http://www.cygwin.com)
 
-	Install: (./run_tests or)
+	Install: 
 		make
+		cd test
+		../e2sch openrd.edf 
+		../e2sch panda.edf
 		cd examples
 		../ppedif < PS10.EDF > PS10
 		../e2net < PS10 > PS10.net or

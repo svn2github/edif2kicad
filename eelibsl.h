@@ -13,9 +13,9 @@
 
 #define BooleanType char
 
-// TODO get rid of PART_NAME_LEN, use char * && strncpy
 #define PART_NAME_LEN	64		/* Maximum length of part name. */
-#define PREFIX_NAME_LEN	5		/* Maximum length of prefix (IC, R, SW etc.). */
+#define SCH_NAME_LEN	80		/* Maximum length of sheet name. */
+#define PREFIX_NAME_LEN	 5		/* Maximum length of prefix (IC, R, SW etc.). */
 #define FOOT_NAME_LEN	40		/* Maximum length of footprint name. */
 #define MFG_NAME_LEN	30		/* Maximum length of manufacture name. */
 #define MFG_PART_LEN	40		/* Maximum length of manf part name. */
@@ -147,30 +147,30 @@ typedef struct LibraryDrawSegment {
 } LibraryDrawSegment;
 
 typedef struct LibraryDrawPin {
-	int posX, posY;			/* Position du point de reference de la Pin */
+	int   posX, posY;	/* Position du point de reference de la Pin */
 	short Len;			/* longueur de la Pin */
-	short Orient;			/* Orientation de la Pin (Up, Down, Left, Right) */
-	short PinShape;			/* Bit a bit: forme de la pin (voir enum prec) */
-	char PinType;			/* type electrique de la pin */
-	char Flags;			/* bit 0 != 0: pin invisible */
-	char  Num[5];			/* numero / ref grid array, si .Num < 0  4 chars */
+	short Orient;		/* Orientation de la Pin (Up, Down, Left, Right) */
+	short PinShape;		/* Bit a bit: forme de la pin (voir enum prec) */
+	char  PinType;		/* type electrique de la pin */
+	char  Flags;		/* bit 0 != 0: pin invisible */
+	char  Num[5];		/* numero / ref grid array, si .Num < 0  4 chars */
 	char * Name;
 	char * ReName;
 	short SizeNum, SizeName;	/* taille des num pin et name pin */
 	} LibraryDrawPin;
 
 typedef struct LibraryDrawEntryStruct {
-	int DrawType;
+	int   DrawType;
 	short Unit;			/* identification de l'unite */
-	short Convert;			/* identification de la forme en multiples rep. */
+	short Convert;		/* identification de la forme en multiples rep. */
 	union {
-	LibraryDrawArc Arc;
-	LibraryDrawCircle Circ;
-	LibraryDrawText Text;
-	LibraryDrawSquare Sqr;
+	LibraryDrawArc 	    Arc;
+	LibraryDrawCircle   Circ;
+	LibraryDrawText     Text;
+	LibraryDrawSquare   Sqr;
 	LibraryDrawPolyline Poly;
-	LibraryDrawSegment Segm;
-	LibraryDrawPin Pin;
+	LibraryDrawSegment  Segm;
+	LibraryDrawPin      Pin;
 	} U;
 	struct LibraryDrawEntryStruct *nxt;
 } LibraryDrawEntryStruct;
@@ -186,7 +186,7 @@ typedef struct LibraryEntryStruct {
 	int NumOfUnits;
 	int TextInside;
 	BooleanType DrawPinNum, DrawPinName, DrawName, DrawPrefix;
-	LibraryFieldEntry *Fields;			/* Liste des Champs auxiliaires */
+	LibraryFieldEntry 	   *Fields;			/* Liste des Champs auxiliaires */
 	LibraryDrawEntryStruct *Drawings;		/* How to draw this part */
 	int BBoxMinX, BBoxMaxX, BBoxMinY, BBoxMaxY;	/* BBox around the part. */
 	struct LibraryEntryStruct *nxt;
@@ -201,20 +201,10 @@ typedef struct LibraryStruct {
 } LibraryStruct;
 
 global LibraryStruct          	*Libs,  *CurrentLib, *DesignName, *LSptr;
-global LibraryEntryStruct 	*LibEntry, *LEptr;
+global LibraryEntryStruct 		*LibEntry, *LEptr;
 global LibraryDrawEntryStruct 	*Drawing, *LDptr;
-global LibraryFieldEntry	*InsEntry;
-global char 			 schName[50];
+global LibraryFieldEntry		*InsEntry;
+global char 			 		fName[SCH_NAME_LEN];
 
 #endif // EELIBSL_H
 
-/*
-ViewRef :       VIEWREF ViewNameRef _ViewRef PopC
-                {
-                $$=$2; if(bug>2)fprintf(Error,"ViewRef: %25s ", $3);
-                iptr = (struct inst *)Malloc(sizeof (struct inst));
-                iptr->sym = $3;
-                iptr->nxt = insts;
-                insts = iptr;
-                }
-*/

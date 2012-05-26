@@ -30,8 +30,9 @@ edif :	ed.h eelibsl.h edif.o
 edif.o : edif.c
 
 edif.c : edif.y
-	bison -t -v -d edif.y 
-	cp edif.tab.c edif.c
+	bison -y -g -t -v -d edif.y 
+	cp y.tab.c edif.c
+#	cp edif.tab.c edif.c
 
 #	mv y.tab.c edif.c
 
@@ -39,5 +40,5 @@ edif.c : edif.y
 # 	cat edif.y.1 edif.y.2 > edif.y
 
 clean :
-	rm *.o edif.c edif.output edif.tab.c edif.tab.h e2sch e2net ppedif 
+	rm *.o y.* edif.c edif.output edif.tab.c edif.tab.h e2sch e2net ppedif 
 	rm e2net.exe  e2sch.exe  ppedif.exe

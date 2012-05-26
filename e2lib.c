@@ -75,5 +75,4 @@ main(int argc, char *argv[])
 
   fclose(FileEESchema);
   fprintf(stderr, " BonJour\n");
-  return(0);
 }

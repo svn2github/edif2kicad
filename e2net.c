@@ -4,6 +4,8 @@
 #define global
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <string.h>
 #include "ed.h"
 #include "eelibsl.h"
@@ -96,7 +98,7 @@ main(int argc, char *argv[])
   strcpy(s1,  "" );
   for (start=cons ; start != NULL ; start = start->nxt ){
       if(strcmp(s1, start->ref) != 0)
-	printf("\n");
+		printf("\n");
       printf("%4s %3s %s\n", start->ref, start->pin, start->nnam);
       strcpy(s1,  start->ref);
   }
@@ -110,18 +112,26 @@ main(int argc, char *argv[])
 
   // output kicad netlist
   int  first=1;
+  time_t mytime;
+  char date[23];
 
-  fprintf(FileNet,"( { netlist created  13/9/2007-18:11:44 }\n");
+  mytime = time(NULL);
+  // printf(ctime(&mytime));
+  ctime_r(&mytime, date);
+  date[24] = 0;
+
+  //fprintf(FileNet,"( { netlist created  13/9/2007-18:11:44}\n" );
+  fprintf(FileNet,"( { netlist created  %s}\n", date );
   // by component
   strcpy(s1,  "" );
   while (cons != NULL){
     if(strcmp(s1, cons->ref) != 0) {
       if(!first) fprintf(FileNet," )\n");
       for( s=NULL, iptr=insts ; iptr != NULL && iptr->ins != NULL ; iptr = iptr->nxt ){
-	if( !strcmp(cons->ref, iptr->ins)){
-	   s = iptr->sym;
-	   break;
-	}
+		if( !strcmp(cons->ref, iptr->ins)){
+		   s = iptr->sym;
+		   break;
+		}
       }	
       fprintf(FileNet," ( 84DFBB8F $noname %s %s  {Lib=%s}\n", cons->ref, s, s);
       first=0;
@@ -139,5 +149,5 @@ main(int argc, char *argv[])
     fprintf(stderr,"  output is %s \n", FileNameNet);
 
   fprintf(stderr, " BonJour\n");
-  return(0);
+  exit(0);
 }

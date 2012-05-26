@@ -4,16 +4,17 @@
 #define global
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "ed.h"
 #include "eelibsl.h"
 
-int bug=3;  		// debug level: 
+int bug=0;  		// debug level: 
 int yydebug=0;
 
 char *InFile = "-";
 
-char  FileNameNet[64], FileNameLib[64], FileNameEESchema[64], FileNameKiPro[64];
+char  FileNameNet[80], FileNameLib[80], FileNameEESchema[80], FileNameKiPro[80];
 FILE *FileEdf, *FileNet, *FileEESchema=NULL, *FileLib=NULL, *FileKiPro=NULL;
 
 global struct inst               *insts=NULL, *iptr=NULL;
@@ -24,7 +25,7 @@ global char  efName[50];
 
 main(int argc, char *argv[])
 {
-  char * version      = "0.97";
+  char * version      = "0.99";
   char * progname;
   extern int nPages;
   extern struct pwr  *pgs;
@@ -47,12 +48,12 @@ main(int argc, char *argv[])
        return(-1);
   }
 
-  Libs=NULL; strcpy(schName,"");
+  Libs=NULL; strcpy(fName,"");
   fprintf(stderr, "Parsing %s & writing .sch file\n", InFile);
-  ParseEDIF(FileEdf, stderr);
+  ParseEDIF(FileEdf, stderr) ; 
 
   fprintf(stderr, "\n%s Libs -> cache <<<<\n", progname);
-  sprintf(FileNameLib,"%s.cache.lib", schName);
+  sprintf(FileNameLib,"%s.cache.lib", fName);
   if( (FileLib = fopen( FileNameLib, "wt" )) == NULL ) {
 	 printf( " %s impossible too create\n", FileNameLib);
      return(-1);
@@ -60,7 +61,6 @@ main(int argc, char *argv[])
   OutLibHead(FileLib, Libs );
 
   for( ; Libs != NULL; Libs = Libs->nxt ){
-	//fprintf(stderr, " Lib:%s %s\n", Libs->Name, schName);
 	SaveActiveLibrary(FileLib, Libs );
   }
   OutLibEnd(FileLib); 
@@ -70,6 +70,5 @@ main(int argc, char *argv[])
 
   fprintf(stderr, " %d Pages\n",nPages);
   fprintf(stderr, " BonJour\n");
-  return(0);
+  exit(0);
 }
-
