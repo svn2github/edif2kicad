@@ -147,7 +147,7 @@ int   g, x,y,size;
 		*t = *s;
 	if(*s == '\0')
 		break;
-	if(len>20){
+	if(len>25){
 		*t='\0';
 		break;
 	}

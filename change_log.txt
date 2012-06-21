@@ -1,6 +1,9 @@
 FILE: change_log.txt
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2012-Jun-20 fwb
+    - fix multi-part sym on DOS 
+
 2012-May-24 fwb
 	-properly generate multiple part symbols (unit)
     -fix power symbols

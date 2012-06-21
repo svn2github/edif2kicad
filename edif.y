@@ -620,7 +620,8 @@ CellNameDef :	NameDef
 		{char part[PART_NAME_LEN]; int i;
 
 		 strncpy(part, $1->s, PART_NAME_LEN);
-		 for( i=PART_NAME_LEN ; part[i] == '\0' && i>0 ; i-- );
+		 for( i=PART_NAME_LEN-1 ; part[i] == '\0' && i>0 ; i-- )
+			;
 		 //fprintf(Error,"'%s' %c%c\n", part, part[i-1],part[i]);
 		 if( isdigit(part[i-1]) && isalpha(part[i]) ){ // mult-part symbol
 			unit = part[i]-'A'+1;
@@ -645,12 +646,14 @@ CellNameDef :	NameDef
 		 }else{
   		   LibEntry = (LibraryEntryStruct *) Malloc(sizeof(LibraryEntryStruct));
 		   strncpy(LibEntry->Name, $1->s, PART_NAME_LEN);
+		   if(strstr(LibEntry->Name,"VCC") || strstr(LibEntry->Name,"GND"))
+		   	  strcpy(LibEntry->Prefix, "#PWR");
+		   else
+			  strcpy(LibEntry->Prefix, "U0");
   		   LibEntry->NumOfUnits = 1;
   		   LibEntry->Type = ROOT;
            LibEntry->PrefixPosX = 0; LibEntry->PrefixPosY = 0; LibEntry->PrefixSize =  DEFAULT_SIZE_TEXT/scale;
   		   LibEntry->NamePosX   = 0; LibEntry->NamePosY   = 0; LibEntry->NameSize   =  DEFAULT_SIZE_TEXT/scale;
-  		   LibEntry->Prefix[0] = 'U';
-  		   LibEntry->Prefix[1] = 0; 
            LibEntry->DrawPinNum = 1; LibEntry->DrawPinName = 1; LibEntry->DrawName = 1; LibEntry->DrawPrefix = 1;
   		   LibEntry->TextInside = 30;
   		   LibEntry->Fields = NULL;
@@ -1515,6 +1518,7 @@ Instance :	INSTANCE InstNameDef _Instance PopC
 			}
 		  }else{ // power symbol
             sprintf(refdesg,"#PWR%d", nPwr++);
+		 	ox=oy=0;
             OutInst(part, refdesg, cur_pnam, null, MfgName, MfgPart, TextSize, tx+ox, -ty-oy, 
 					tx, -ty, tx, -ty, 0, 1, unit, IRot);
 			val->s=0;
