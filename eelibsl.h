@@ -205,6 +205,7 @@ global LibraryEntryStruct 		*LibEntry, *LEptr;
 global LibraryDrawEntryStruct 	*Drawing, *LDptr;
 global LibraryFieldEntry		*InsEntry;
 global char 			 		fName[SCH_NAME_LEN];
+global struct plst				*psize;
 
 #endif // EELIBSL_H
 

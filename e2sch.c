@@ -21,7 +21,6 @@ global struct inst               *insts=NULL, *iptr=NULL;
 global struct con                *cons=NULL,  *cptr=NULL;
 global int pass2=0;
 global float scale;
-global char  efName[50];
 
 main(int argc, char *argv[])
 {
@@ -53,17 +52,17 @@ main(int argc, char *argv[])
   ParseEDIF(FileEdf, stderr) ; 
 
   fprintf(stderr, "\n%s Libs -> cache <<<<\n", progname);
-  sprintf(FileNameLib,"%s.cache.lib", fName);
+  sprintf(FileNameLib,"%s-cache.lib", fName);
   if( (FileLib = fopen( FileNameLib, "wt" )) == NULL ) {
 	 printf( " %s impossible too create\n", FileNameLib);
      return(-1);
   }
-  OutLibHead(FileLib, Libs );
+  OutLibHead(FileLib, fName );
 
   for( ; Libs != NULL; Libs = Libs->nxt ){
 	SaveActiveLibrary(FileLib, Libs );
   }
-  OutLibEnd(FileLib); 
+  OutLibEnd(FileLib, fName); 
 
   pass2++;
 //  freopen(InFile, "rt", FileEdf);

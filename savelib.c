@@ -1,5 +1,5 @@
 /************************/
-/*	savelib.cc	*/
+/*	savelib.c	*/
 /************************/
 #include <stdio.h>
 #include <string.h>
@@ -62,6 +62,7 @@ OutPro(LibraryStruct * Libs)
 OpenSch()
 {
   CloseSch(); // close if previous open
+  int x,y;
 	
   sprintf(FileNameEESchema,"%s.sch", fName);
   if( (FileEESchema = fopen( FileNameEESchema, "wt" )) == NULL ) {
@@ -76,7 +77,11 @@ OpenSch()
   fprintf(FileEESchema,"LIBS:");
   fprintf(FileEESchema,"\nEELAYER 24 0\nEELAYER END\n");
 
-  fprintf(FileEESchema,"$Descr D 34000 22000\n"); // TODO - get size from EDIF
+  x=psize->nxt->x;
+  y=psize->nxt->y; if(y<0) y= -y;
+  x += x/10; y += y/10; // make sheet 10% bigger
+//  fprintf(FileEESchema,"$Descr D 34000 22000\n"); // TODO - get size from EDIF
+  fprintf(FileEESchema,"$Descr X %d %d\n",x,y); 
 
   fprintf(FileEESchema,"Sheet 1 1\n");
   fprintf(FileEESchema,"Title \"\"\n");
@@ -282,17 +287,17 @@ static int WriteOneLibEntry(FILE * ExportFile, LibraryEntryStruct * LibEntry);
 
 /* Variables locales */
 
-void OutLibHead(FILE *SaveFile, LibraryStruct *CurrentLib )
+void OutLibHead(FILE *SaveFile, char *fname )
 {
 
-    if( bug>2)fprintf(stderr,"OutLibHead %s\n", CurrentLib->Name);
+    if( bug>2)fprintf(stderr,"OutLibHead %s\n", fname);
 	fprintf(SaveFile,"%s\n", FILE_IDENT);
-	fprintf(SaveFile,"### Library: %s ###\n", CurrentLib->Name);
+	fprintf(SaveFile,"### Library: %s ###\n", fname);
 }
 
-void OutLibEnd(FILE *SaveFile)
+void OutLibEnd(FILE *SaveFile, char *fname)
 {
-    if( bug>2)fprintf(stderr,"OutLibEnd %s\n", CurrentLib->Name);
+    if( bug>2)fprintf(stderr,"OutLibEnd %s\n", fname);
 	fprintf(SaveFile,"#End Library\n");
 	fclose(SaveFile);
 }
@@ -307,7 +312,9 @@ int ii;
 
 	LibEntry = (LibraryEntryStruct *) CurrentLib->Entries;
 	ii = CurrentLib->NumOfParts ; 
-	fprintf(stderr, "%03d #parts %s\n", ii, CurrentLib->Name);
+	if( ii == 0 )
+		return;
+	fprintf(stderr, "SaveActiveLibrary %s %03d #parts \n", CurrentLib->Name, ii);
 	for(  ; ii > 0; ii-- ) {
 		if(LibEntry != NULL) {
 			WriteOneLibEntry(SaveFile, LibEntry);
@@ -343,9 +350,11 @@ char FlagXpin = 0;
 int x1,y1,x2,y2,r;
 
 	if( LibEntry->Type != ROOT ) return(1);
+	if(!strcmp(fName, LibEntry->Name))
+		return;
 
 	/* Creation du commentaire donnant le nom du composant */
-	//fprintf(stderr,"   %s\n", LibEntry->Name);
+	fprintf(stderr,"   %s\n", LibEntry->Name);
 	fprintf(ExportFile,"# %s\n#\n", LibEntry->Name);
 
 	/* Generation des lignes utiles */

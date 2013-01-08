@@ -1,6 +1,20 @@
 FILE: change_log.txt
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+2013-Jan-06 fwb
+	-add BeagleBone to test/BONE.edf
+		contains cell redefinitions(RES_4) but seems to display ok in eeschema
+	-cleaner schematic pages
+	-show component pins
+	-noshow OFFPAGE* pin names
+    -to run e2sch, need to set:
+		export MALLOC_CHECK_=1
+	-revisit mult-part sym, fixed bad U.Pin.Num[4]=0; 
+	-sheet size now user from edif - best guess
+	-no longer put design out as a library part
+	-scheme DRC mostly about power/gnd symbols (#ND*)
+	-netlist not usable (more work)
+
 2012-Jun-20 fwb
     - fix multi-part sym on DOS 
 
@@ -20,7 +34,7 @@ TODO fixme
 	-convert %13 in wxStrings to CR/LF, does OpenGL handle this?
 	-String len currently set to 20, wxString len max?
 	-PORT orientation (0,90,180,270)
-	-sheet size
+	-page offset, scale
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
